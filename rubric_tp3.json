@@ -1,0 +1,122 @@
+{
+  "tp_metadata": {
+    "tp_id": "TSO-2026-TP3",
+    "title": "TP N° 3: Algoritmos de Planificación de CPU",
+    "catedra": "Teoría de Sistemas Operativos - UNJu Facultad de Ingeniería",
+    "ciclo_lectivo": "2026",
+    "responsable": "Ing. María Fernanda Vázquez",
+    "jtp": "Ing. Fabio D. Argañaraz",
+    "version": "1.0.0"
+  },
+  "security": {
+    "algorithm": "SHA-256 + Salted HMAC",
+    "protected": true
+  },
+  "max_score": 100,
+  "exercises": {
+    "ej1_mecanismos_vs_politicas_metricas": {
+      "weight": 10,
+      "hashes": {
+        "ctx_switch": "7644d55bdecfc005e90273f44f613549e0113c088e02b7a85d0626f0689a03b5",
+        "queue_management": "f3d1b303e6cf93f7cf1c4d39c638176afb56d45279a2f1f441667fbc2cfb99c0",
+        "priority_decision": "0329b21a59bd27914432f20044e04dba32d2f6076a2dd9e760a4ba9008923b0d",
+        "quantum_sizing": "1b937f4aea40368d4d84bb814a5f6bb6b656a45a4b78bca5165c1c22de2b02a1",
+        "metric_turnaround": "a0a2c30ed9b8ce42a299b32981037301f4fa1551b1d1944a478bbb7ada12d7c2",
+        "metric_waiting": "c5cefc1a3d8059649820634dd79a41a63c05e93d0bf7f0a4bf97dc25b921a93b",
+        "metric_service_index": "ba6c772075469941666f6a56be2decd7cc7c11995a153f28cce8cb280397acbf",
+        "metric_throughput": "5edd4097f22bdb4e3226cc4f29a7e3d90c361c1cb9b62d9f3912bc0bac96fe7c",
+        "metric_cpu_util": "0bad71cf99a0ffe187da9dd664460860fb686d46f3183b56e28b864b755883cd"
+      },
+      "feedback": "Consultar Clase 4 Diap. 5, 6 y 10; Silberschatz Cap. 5.1-5.2; Stallings Cap. 9.1."
+    },
+    "ej2_fcfs_convoy": {
+      "weight": 10,
+      "hashes": {
+        "final_order": "f6cde3cc8fc6ae79a49fb413bdb9b90065eff68061ad1a430658527b6c058b58",
+        "best_process": "7cace4d07c71059082a0a2bee1a8130ac865861547e24ed8eee7e2fc1567dccb",
+        "worst_process": "480c3ab217d3f102c7efb43f52df01acbc4168a465a3637bd27c64e8e3be83fa",
+        "convoy_cause": "ca697c1b0269d3360868a50be75cdd856fb981a5d7b7a3877991499151cac7fc"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11, 14, 15; Silberschatz Cap. 5.3.1; Carretero Cap. 3.4.1."
+    },
+    "ej3_sjn_no_apropiativo": {
+      "weight": 10,
+      "hashes": {
+        "dispatch_t0": "f0e940887648296010252505824786550963f3e519577e5129128ad0a198a8d9",
+        "dispatch_t1": "41edadda9977aae625958648dcf26f201e4e31189fb8f7503bfc0b98e44f8935",
+        "preemption_behavior": "6c269b0382dcb1d1442060f42fcc4a40311b6282da896cc51508cdba932a8e3f",
+        "avg_wait_time": "d101f87ac82a8a723fec806925d740f65d9afc9c44c0322bbc55e6b6660a0468"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11, 12; Silberschatz Cap. 5.3.2; Stallings Cap. 9.2."
+    },
+    "ej4_srt_apropiativo": {
+      "weight": 10,
+      "hashes": {
+        "preemption_condition": "7484f8f7b2f8f33a58877c52c107ac2b94ec0ca00ae8fc54197cfc7549b34fca",
+        "overhead_tradeoff": "384f3838cc4919245b5217d95865a21f9252fbc925d6618b8f3f7d787598be1a",
+        "workload_comparison": "570c5e2f0e8d1610d8102899e3d7588021b9aa08eabc04b08c94fbb71b74cb3e",
+        "starvation_risk": "b14282ede2695f2016d026ace932e8eabd2a3ebb8be7c86c04d270c570247170"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11; Silberschatz Cap. 5.3.2; Carretero Cap. 3.4.3."
+    },
+    "ej5_round_robin": {
+      "weight": 10,
+      "hashes": {
+        "quantum_expiration": "b6dfb59dff57ec8da3d7946592e383648069600c246f973049185032dec40fc7",
+        "tie_breaker_order": "ad50ae531fadc8e45bc40ee75f02d294ef79d8ab7f62a2b6cf3de09d0aada4e3",
+        "final_order": "6c07f25546b9be4f2e4dfa5c9b9a6799c73269f5b13643148fa20969043180cf",
+        "quantum_impact_large": "d8cfd56801bbae925890a2a1bba9beb29f28dc5a7b772e13a8e9cdda7504c2bb"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11, 12; Silberschatz Cap. 5.3.4; Stallings Cap. 9.2."
+    },
+    "ej6_prioridad_apropiativa": {
+      "weight": 10,
+      "hashes": {
+        "priority_scale": "39f0c0fda4d7cf3192bf7b978e364fc9b700652833192239009e8a3ab78c8dee",
+        "first_dispatched": "48fe2cf51777bdb3f7ce1b68fc51aae2645801e47c9c23382fceddf453a09235",
+        "preemption_event": "084a534783568b0dab1befc7422ce7d52ba9f1b8ed34b75c04b003c19f88107e",
+        "starvation_solution": "d5e6f6c9298589618bf494dbb6529a321960859e10d1ce06eee4335497ed34ef"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11, 12; Silberschatz Cap. 5.3.3; Carretero Cap. 3.4.4."
+    },
+    "ej7_hrn_algoritmo": {
+      "weight": 10,
+      "hashes": {
+        "formula_definition": "dd5e36b26d9c175558666b727b371b0fd38cc9c4677abd9e53d6ef4e32c14d5b",
+        "preemption_type": "d253b0580db199feaf31b6584e37580d37fb70ae6245dc8b9b44d9eb6743648f",
+        "starvation_behavior": "2efd2c58d99fc6b8eba8a07ac28a6e980ea2b51ec08d85ec679379485b3159be",
+        "first_finished": "40e6538bd811c7a9120bbf6a1d7b86b5151da3934c144695544da57712d75e61"
+      },
+      "feedback": "Consultar Clase 4 Diap. 11; Stallings Cap. 9.2 (pp. 402-404); Carretero Cap. 3.4.5."
+    },
+    "ej8_matriz_comparativa_multicriterio": {
+      "weight": 10,
+      "hashes": {
+        "min_avg_wait": "9b53bd8f77e928237fe8edc7f486cd82b37287e3c686b8e95530ae07a6aee4f3",
+        "max_fairness_interactive": "ca5174bff35347d9849a6a0ca058c40abb891c1b58febb7dcd550f5b4277fdf8",
+        "highest_wait_c": "eb1f3642ddf37831e0bdf9b24b3006b4ae857312390bf163f9a373a7e8026f89",
+        "overall_most_penalized": "5f308a30faad2a4c8b87757d3c897cb60e23f796f8ddc5d9cca5c343746522cb"
+      },
+      "feedback": "Consultar tablas de resolución de cátedra y Silberschatz Cap. 5.4."
+    },
+    "ej9_planificacion_multiprocesadores": {
+      "weight": 10,
+      "hashes": {
+        "resource_contention": "b606b8b9019f0a6e34353c836961788726e47e75d306e6970f780e564cd64c45",
+        "processor_affinity": "ae72d341831e6758e2f35d89ce654f5cfdd97c30dfe64f11b9cca02b60d3c4ba",
+        "load_balancing": "6fe3c1b89bda5edee15bc4001829dc4093645b8f06ea7f279a9d8176fe85780b"
+      },
+      "feedback": "Consultar Clase 4 Diap. 17; Silberschatz Cap. 5.5; Stallings Cap. 10.1."
+    },
+    "ej10_evaluacion_seleccion_politicas": {
+      "weight": 10,
+      "hashes": {
+        "golden_rule": "e1793634d77638b2a995cf5427c99414c46ed706bb9153ad9a93714bec5fff97",
+        "interactive_system": "9fd626bb58626a9cf862e68ff1d0ae76c387f4e94c210754b99b2f853ce86e07",
+        "batch_throughput": "c6719827405d41344b69333a86d12e5da1eb92f05e8fca57ceae6807c0e5217d",
+        "context_switch_cost": "36a67e0af3df44a6237f0ca3b5f6d119812caf737b9315b6f3a5c358b2217894"
+      },
+      "feedback": "Consultar Clase 4 Diap. 18, 19; Silberschatz Cap. 5.6; Tanenbaum Cap. 2.4.5."
+    }
+  }
+}

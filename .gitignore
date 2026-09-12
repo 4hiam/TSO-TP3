@@ -1,0 +1,17 @@
+# Matriz Docente Privada (Protección de Soluciones)
+rubric_tp3_master.json
+*_master.json
+
+# Entregas locales y temporales de evaluación
+respuestas_tp3*.json
+*.pyc
+__pycache__/
+.venv/
+env/
+.pytest_cache/
+
+# Archivos de sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

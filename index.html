@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TP N° 3: Algoritmos de Planificación de CPU | TSO - UNJu FI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Librerías de Vanguardia para Animación, Gráficos y Gamificación -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts@3.46.0/dist/apexcharts.min.js"></script>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <!-- ==================== HEADER HERO ==================== -->
+    <header class="header-hero">
+      <div class="header-meta">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="badge-tag green">🎓 UNJu — Facultad de Ingeniería</span>
+          <span class="badge-tag purple">Ingeniería Informática / Lic. en Sistemas</span>
+          <span class="badge-tag cyan">Ciclo Lectivo 2026</span>
+        </div>
+        <button id="theme-toggle-btn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;">🌓 Tema</button>
+      </div>
+
+      <h1 class="main-title">Trabajo Práctico N° 3: Algoritmos de Planificación de CPU</h1>
+      <p class="subtitle">Mecanismos vs. Políticas, Algoritmos Clásicos (FCFS, SJN, SRT, Round Robin, Prioridad, HRN), Criterios de Rendimiento y Laboratorio Interactivo</p>
+
+      <div class="academic-info">
+        <div><strong>Cátedra:</strong> Teoría de Sistemas Operativos (TSO)</div>
+        <div><strong>Responsable de Cátedra:</strong> Ing. María Fernanda Vázquez</div>
+        <div><strong>Jefe de Trabajos Prácticos:</strong> Ing. Fabio D. Argañaraz</div>
+        <div><strong>Modalidad:</strong> Individual — Autoevaluativo + Exportación JSON para Git / GitHub Actions</div>
+      </div>
+
+      <!-- Datos del Estudiante -->
+      <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border-color); display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">NOMBRE Y APELLIDO *</label>
+          <input type="text" id="student-name" class="custom-select" placeholder="Ej: Juan Pérez" style="font-family:inherit;">
+        </div>
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">DNI / LEGAJO *</label>
+          <input type="text" id="student-dni" class="custom-select" placeholder="Ej: 42123456" style="font-family:inherit;">
+        </div>
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">CARRERA</label>
+          <input type="text" id="student-career" class="custom-select" value="Ingeniería Informática" style="font-family:inherit;">
+        </div>
+        <div>
+          <label style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); display: block; margin-bottom: 4px;">USUARIO DE GITHUB</label>
+          <input type="text" id="student-github" class="custom-select" placeholder="Ej: juanperez-fi" style="font-family:inherit;">
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== STICKY TOOLBAR ==================== -->
+    <div class="sticky-toolbar">
+      <div class="progress-container">
+        <div class="progress-labels">
+          <span>Progreso de Autoevaluación</span>
+          <span id="progress-percentage">0% (0/10 completados)</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-bar-fill" id="progress-bar"></div>
+        </div>
+      </div>
+
+      <div class="toolbar-actions">
+        <a href="pizarra_gantt.html" class="btn" style="background: rgba(6, 182, 212, 0.12); color: #22d3ee; border: 1px solid rgba(6, 182, 212, 0.35); text-decoration: none;">🎨 Pizarra Digital</a>
+        <button class="btn btn-outline-amber" id="btn-open-biblio-all">📚 Guía Bibliográfica</button>
+        <button class="btn btn-secondary" id="btn-import-json">📥 Importar JSON</button>
+        <input type="file" id="file-import-input" accept=".json" style="display:none;">
+        <button class="btn btn-outline-blue" id="btn-git-guide">🚀 Guía Git / GitHub</button>
+        <button class="btn btn-primary" id="btn-export-json" disabled>💾 Exportar Respuestas (.json)</button>
+      </div>
+    </div>
+
+    <!-- ==================== KERNEL COCKPIT (SIMULADOR INTERACTIVO) ==================== -->
+    <section class="simulator-section">
+      <div class="section-header">
+        <div class="section-title">
+          <span>🔬 Laboratorio Interactivo: Kernel Cockpit & Diagrama de Gantt</span>
+        </div>
+        <span class="badge-tag green">Carga de Trabajo Oficial: Procesos A, B, C, D, E</span>
+      </div>
+
+      <!-- Selector de Algoritmo -->
+      <div class="algo-selector-bar">
+        <button class="algo-pill-btn active" data-algo="fcfs">FCFS (Primero en Llegar)</button>
+        <button class="algo-pill-btn" data-algo="sjn">SJN / SJF (Ráfaga Corta No Aprop.)</button>
+        <button class="algo-pill-btn" data-algo="srt">SRT (Ráfaga Restante Aprop.)</button>
+        <button class="algo-pill-btn" data-algo="rr">Round Robin (q = 2)</button>
+        <button class="algo-pill-btn" data-algo="priority">Prioridad Apropiativa (3>2>1>0)</button>
+        <button class="algo-pill-btn" data-algo="hrn">HRN (P = [t+w]/t)</button>
+      </div>
+
+      <!-- Barra de Controles de Reproducción -->
+      <div class="sim-controls-bar">
+        <div class="sim-btn-group">
+          <button class="btn btn-primary" id="btn-sim-play">▶ Iniciar Simulación</button>
+          <button class="btn btn-primary" id="btn-sim-pause" style="display:none; background:#ea580c;">⏸ Pausar</button>
+          <button class="btn btn-secondary" id="btn-sim-step">⏭ Tick +1</button>
+          <button class="btn btn-secondary" id="btn-sim-reset">🔄 Reiniciar</button>
+        </div>
+
+        <div class="clock-display">
+          <span>Reloj del Sistema:</span>
+          <span id="system-clock">t = 0</span>
+        </div>
+
+        <div class="speed-control">
+          <span>Velocidad:</span>
+          <input type="range" id="sim-speed-slider" min="0.5" max="3.0" step="0.5" value="1.0" style="width: 100px; cursor: pointer;">
+          <span id="speed-label" style="font-family:'Fira Code', monospace; font-weight:700;">1x</span>
+        </div>
+      </div>
+
+      <!-- Hardware Cockpit: Ready Queue, CPU Core, I/O Bay -->
+      <div class="cockpit-grid">
+        <div class="hardware-bay">
+          <div class="bay-header">
+            <span>📋 Cola de Listos (Ready Queue)</span>
+          </div>
+          <div class="bay-content" id="ready-queue-content">
+            <!-- Renderizado dinámico -->
+          </div>
+        </div>
+
+        <div class="hardware-bay cpu-socket-bay">
+          <div class="bay-header">
+            <span>⚡ Zócalo de CPU (Core 0)</span>
+          </div>
+          <div class="bay-content cpu-core-slot" id="cpu-socket-content">
+            <!-- Renderizado dinámico -->
+          </div>
+        </div>
+
+        <div class="hardware-bay">
+          <div class="bay-header">
+            <span>💾 Bahía de Dispositivos (E/S - I/O Bay)</span>
+          </div>
+          <div class="bay-content" id="io-bay-content">
+            <!-- Renderizado dinámico -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Diagrama de Gantt Dinámico -->
+      <div class="gantt-wrapper">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">Cronograma de Ejecución (Diagrama de Gantt)</h4>
+          <div class="gantt-legend">
+            <div class="legend-item"><div class="legend-box cpu"></div><span>Ejecución CPU</span></div>
+            <div class="legend-item"><div class="legend-box wait"></div><span>Espera en Listos</span></div>
+            <div class="legend-item"><div class="legend-box io"></div><span>Bloqueo E/S</span></div>
+          </div>
+        </div>
+        <div class="gantt-grid-container" id="gantt-grid">
+          <!-- Renderizado dinámico -->
+        </div>
+      </div>
+
+      <!-- Dashboard Comparativo & Tabla de Métricas Oficiales -->
+      <div class="dashboard-grid">
+        <div class="chart-card">
+          <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px;">📊 Comparación Multicriterio: Tiempos de Espera vs. Retorno</h4>
+          <div id="comparison-chart"></div>
+        </div>
+
+        <div class="table-card">
+          <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 6px;">📋 Métricas del Algoritmo Activo (Valores de Cátedra)</h4>
+          <div style="overflow-x: auto;">
+            <table class="metrics-table">
+              <thead>
+                <tr>
+                  <th>Proceso</th>
+                  <th>t Llegada</th>
+                  <th>t Fin</th>
+                  <th>Servicio (t)</th>
+                  <th>Retorno (T)</th>
+                  <th>Espera (E)</th>
+                  <th>IP (T/t)</th>
+                  <th>IR (t/T)</th>
+                </tr>
+              </thead>
+              <tbody id="metrics-table-body">
+                <!-- Renderizado dinámico -->
+              </tbody>
+              <tfoot>
+                <tr class="averages-row" id="metrics-averages-row">
+                  <!-- Renderizado dinámico -->
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== EJERCICIOS AUTOEVALUATIVOS ==================== -->
+    <main class="exercises-section">
+
+      <!-- EJERCICIO 1 -->
+      <article class="exercise-card" id="card-ej1_mecanismos_vs_politicas_metricas">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 1 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Mecanismos vs. Políticas y Criterios de Rendimiento del Sistema</h3>
+        <p class="ex-desc">El diseño de la gestión de CPU se divide fundamentalmente entre <em>mecanismos</em> (rutinas de bajo nivel del kernel) y <em>políticas</em> (criterios de decisión de alto nivel). Clasifica los siguientes componentes y normaliza las métricas de rendimiento:</p>
+
+        <div style="margin-bottom: 12px; font-size: 0.88rem; color: var(--text-secondary);">
+          Arrastra cada tarjeta conceptual desde el contenedor central hacia el buzón correspondiente (o entre buzones):
+        </div>
+
+        <div class="kanban-dual-container">
+          <div class="kanban-bucket bucket-mecanismo" id="kanban-bucket-mecanismo" data-bucket="mecanismo">
+            <div class="kanban-bucket-title mecanismo">
+              <span>📦 Mecanismos del Kernel (Bajo Nivel / "Cómo se hace")</span>
+            </div>
+            <!-- Se alojan tarjetas de mecanismos -->
+          </div>
+
+          <div class="kanban-bucket bucket-politica" id="kanban-bucket-politica" data-bucket="politica">
+            <div class="kanban-bucket-title politica">
+              <span>📋 Políticas de Planificación (Alto Nivel / "Qué se hace")</span>
+            </div>
+            <!-- Se alojan tarjetas de políticas -->
+          </div>
+        </div>
+
+        <div class="sortable-strip-wrapper" style="margin-bottom: 20px;">
+          <div class="sortable-strip-header">
+            <span>📥 Tarjetas Conceptuales Pendientes de Clasificación:</span>
+          </div>
+          <div class="kanban-bucket" id="kanban-bucket-unassigned" style="min-height: 60px; border-style: dotted; background: transparent; flex-direction: row; flex-wrap: wrap;">
+            <div class="kanban-card" data-item="ctx_switch" data-ex="ej1_mecanismos_vs_politicas_metricas">
+              <span class="sortable-handle">⠿</span>
+              <div><strong>Cambio de Contexto:</strong> Rutina de bajo nivel para salvar registros del PCB saliente y restaurar el entrante.</div>
+            </div>
+            <div class="kanban-card" data-item="queue_management" data-ex="ej1_mecanismos_vs_politicas_metricas">
+              <span class="sortable-handle">⠿</span>
+              <div><strong>Administración de Colas:</strong> Manipulación y enlace de punteros en colas de listos y bloqueados.</div>
+            </div>
+            <div class="kanban-card" data-item="priority_decision" data-ex="ej1_mecanismos_vs_politicas_metricas">
+              <span class="sortable-handle">⠿</span>
+              <div><strong>Regla de Priorización:</strong> Criterio de alto nivel que decide favorecer procesos interactivos sobre lotes.</div>
+            </div>
+            <div class="kanban-card" data-item="quantum_sizing" data-ex="ej1_mecanismos_vs_politicas_metricas">
+              <span class="sortable-handle">⠿</span>
+              <div><strong>Duración del Quantum:</strong> Determinación de la cuota de tiempo de CPU en Round Robin.</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-top:16px;">
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Tiempo de Retorno (Turnaround T = tf - ti):</label>
+            <select class="custom-select" data-ex="ej1_mecanismos_vs_politicas_metricas" data-item="metric_turnaround">
+              <option value="">-- Seleccionar Métrica --</option>
+              <option value="turnaround">Tiempo total transcurrido desde la llegada hasta la terminación completa</option>
+              <option value="response_time">Tiempo transcurrido desde la orden hasta que emite su primer resultado visible</option>
+              <option value="cpu_burst">Duración acumulada de operaciones aritméticas en el procesador</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Tiempo de Espera (Waiting Time E = T - t):</label>
+            <select class="custom-select" data-ex="ej1_mecanismos_vs_politicas_metricas" data-item="metric_waiting">
+              <option value="">-- Seleccionar Métrica --</option>
+              <option value="waiting">Suma total de períodos que el proceso pasa en la cola de listos</option>
+              <option value="io_waiting">Tiempo consumido por operaciones lentas en disco y red</option>
+              <option value="idle_cpu">Tiempo en que la CPU no tiene procesos listos para despachar</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Índice de Servicio (IR = t / T):</label>
+            <select class="custom-select" data-ex="ej1_mecanismos_vs_politicas_metricas" data-item="metric_service_index">
+              <option value="">-- Seleccionar Métrica --</option>
+              <option value="service_index">Cociente entre el tiempo de ejecución útil y el tiempo de estancia total</option>
+              <option value="penalty_index">Cociente inverso que mide cuántas veces se multiplica la espera respecto al servicio</option>
+              <option value="throughput_ratio">Relación entre procesos finalizados y la velocidad de reloj</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Rendimiento del Sistema (Throughput):</label>
+            <select class="custom-select" data-ex="ej1_mecanismos_vs_politicas_metricas" data-item="metric_throughput">
+              <option value="">-- Seleccionar Métrica --</option>
+              <option value="throughput">Número de procesos completados por unidad de tiempo</option>
+              <option value="core_clock">Frecuencia nominal de ciclos por segundo del procesador</option>
+              <option value="ram_util">Porcentaje de ocupación de las páginas de memoria física</option>
+            </select>
+          </div>
+          <div>
+            <label style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:4px;">Utilización de CPU:</label>
+            <select class="custom-select" data-ex="ej1_mecanismos_vs_politicas_metricas" data-item="metric_cpu_util">
+              <option value="">-- Seleccionar Métrica --</option>
+              <option value="cpu_util">Porcentaje de tiempo en que la CPU ejecuta instrucciones útiles (40% - 90%)</option>
+              <option value="peak_power">Consumo energético en vatios durante picos de cómputo</option>
+              <option value="cache_hit">Proporción de lecturas resueltas en el nivel L1 sin ir a memoria RAM</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 5, 6 y 10 (Mecanismos vs. Políticas, Medidas T, E, IR).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.1 (Conceptos básicos) y Cap. 5.2 (Criterios de planificación, pp. 153–158).<br>
+            • <strong>Stallings (5ta Ed.):</strong> Cap. 9.1 (Criterios de planificación, pp. 385–393).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 2 -->
+      <article class="exercise-card" id="card-ej2_fcfs_convoy">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 2 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Planificación FCFS (First-Come, First-Served) y Efecto Convoy</h3>
+        <p class="ex-desc">En el simulador, selecciona <strong>FCFS</strong> y observa el cronograma sobre la carga de trabajo oficial. Responde las siguientes deducciones analíticas:</p>
+
+        <!-- Cinta interactiva con SortableJS para Orden de Finalización -->
+        <div class="sortable-strip-wrapper">
+          <div class="sortable-strip-header">
+            <span>🔀 <strong>Orden Cronológico de Finalización:</strong> Arrastra y ordena las 5 fichas de izquierda a derecha (1° al 5° en finalizar):</span>
+            <span id="fcfs-order-display" style="font-family:'Fira Code', monospace; font-size:0.85rem; font-weight:700; color:#38bdf8;">D ➔ B ➔ A ➔ E ➔ C</span>
+          </div>
+          <div class="sortable-strip" id="sortable-fcfs-order" data-ex="ej2_fcfs_convoy" data-item="final_order">
+            <div class="sortable-proc-card" data-proc="a">
+              <div class="sortable-proc-badge">Proceso A <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">Ráfagas: (1, 2, 3)</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="b">
+              <div class="sortable-proc-badge">Proceso B <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">Ráfagas: (2, 2)</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="c">
+              <div class="sortable-proc-badge">Proceso C <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">Ráfagas: (2, 1, 2, 1)</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="d">
+              <div class="sortable-proc-badge">Proceso D <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">Ráfagas: (5)</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="e">
+              <div class="sortable-proc-badge">Proceso E <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">Ráfagas: (3, 2)</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Proceso más beneficiado (menor espera E y mayor IR):</label>
+            <select class="custom-select" data-ex="ej2_fcfs_convoy" data-item="best_process">
+              <option value="">-- Seleccionar Proceso --</option>
+              <option value="d">Proceso D (Espera E = 3 ticks, Índice IR = 0.625)</option>
+              <option value="a">Proceso A (Espera E = 15 ticks, Índice IR = 0.286)</option>
+              <option value="b">Proceso B (Espera E = 12 ticks, Índice IR = 0.250)</option>
+              <option value="e">Proceso E (Espera E = 14 ticks, Índice IR = 0.263)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Proceso más perjudicado/relegado (mayor tiempo de espera E):</label>
+            <select class="custom-select" data-ex="ej2_fcfs_convoy" data-item="worst_process">
+              <option value="">-- Seleccionar Proceso --</option>
+              <option value="c">Proceso C (Pasa 21 ticks esperando en lista de listos, IR = 0.222)</option>
+              <option value="b">Proceso B (Pasa 12 ticks esperando en lista de listos, IR = 0.250)</option>
+              <option value="a">Proceso A (Pasa 15 ticks esperando en lista de listos, IR = 0.286)</option>
+              <option value="e">Proceso E (Pasa 14 ticks esperando en lista de listos, IR = 0.263)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Causa del Efecto Convoy en FCFS:</label>
+            <select class="custom-select" data-ex="ej2_fcfs_convoy" data-item="convoy_cause">
+              <option value="">-- Seleccionar Causa --</option>
+              <option value="cpu_hog_blocking">Procesos cortos quedan retenidos esperando a que ráfagas largas no apropiativas liberen la CPU</option>
+              <option value="context_switch_storm">Sobrecarga masiva por desalojos continuos provocados por expiraciones de quantum</option>
+              <option value="starvation_by_priority">Inanición indefinida producida por arribos de procesos de prioridad superior</option>
+              <option value="deadlock_resources">Bloqueo mutuo circular entre periféricos de entrada/salida y memoria RAM</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 11, 14 y 15 (FCFS, Efecto Convoy, Ejemplo paso a paso).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.3.1 (Planificación FCFS, pp. 158–160).<br>
+            • <strong>Carretero:</strong> Cap. 3.4.1 (Primero en llegar, primero en ser servido, pp. 92–94).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 3 -->
+      <article class="exercise-card" id="card-ej3_sjn_no_apropiativo">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 3 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Algoritmo SJN / SJF (Shortest Job Next - No Apropiativo)</h3>
+        <p class="ex-desc">SJN selecciona el proceso con la ráfaga de CPU más corta entre los disponibles en la cola de listos. Analiza los instantes iniciales y el comportamiento general en el simulador:</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">En t = 0 arriban A (ráfaga=1) y C (ráfaga=2). ¿Quién toma la CPU?:</label>
+            <select class="custom-select" data-ex="ej3_sjn_no_apropiativo" data-item="dispatch_t0">
+              <option value="">-- Seleccionar --</option>
+              <option value="a">Proceso A (posee la ráfaga más corta: 1 tick)</option>
+              <option value="c">Proceso C (posee mayor prioridad según tabla de carga)</option>
+              <option value="b">Proceso B (por orden de llegada en la cola del kernel)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">En t = 1 finaliza la ráfaga de A y pasa a E/S. ¿Quién ejecuta a continuación?:</label>
+            <select class="custom-select" data-ex="ej3_sjn_no_apropiativo" data-item="dispatch_t1">
+              <option value="">-- Seleccionar --</option>
+              <option value="c">Proceso C (es el único disponible en la cola de listos con ráfaga 2)</option>
+              <option value="a">Proceso A (reingresa de inmediato sin completar el bloqueo)</option>
+              <option value="d">Proceso D (espera adelantada en el planificador)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Naturaleza del Desalojo en SJN:</label>
+            <select class="custom-select" data-ex="ej3_sjn_no_apropiativo" data-item="preemption_behavior">
+              <option value="">-- Seleccionar --</option>
+              <option value="no_apropiativo">No Apropiativo: una vez que un proceso toma la CPU, la retiene hasta terminar su ráfaga o bloquearse voluntariamente</option>
+              <option value="apropiativo">Apropiativo: desaloja a la CPU inmediatamente si arriba un trabajo con ráfaga menor</option>
+              <option value="semi_apropiativo">Semi-apropiativo: solo desaloja si el proceso en CPU supera el quantum asignado</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Tiempo de Espera Promedio oficial en SJN:</label>
+            <select class="custom-select" data-ex="ej3_sjn_no_apropiativo" data-item="avg_wait_time">
+              <option value="">-- Seleccionar Valor --</option>
+              <option value="10.8">E Promedio = 10.8 ticks (optimiza notablemente respecto a FCFS que fue 13.0)</option>
+              <option value="14.0">E Promedio = 14.0 ticks (mayor sobrecarga de espera)</option>
+              <option value="18.2">E Promedio = 18.2 ticks (idéntico al tiempo de retorno)</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 11 y 12 (SJF, Minimización del tiempo de espera).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.3.2 (Planificación por el trabajo más corto primero, pp. 160–162).<br>
+            • <strong>Stallings (5ta Ed.):</strong> Cap. 9.2 (Primero el proceso más corto, pp. 396–399).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 4 -->
+      <article class="exercise-card" id="card-ej4_srt_apropiativo">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 4 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Algoritmo SRT (Shortest Remaining Time - Apropiativo)</h3>
+        <p class="ex-desc">SRT es la variante expulsiva/desalojable de SJF. Evalúa su lógica de preemption y el impacto en la ejecución:</p>
+
+        <div class="radio-cards-grid" data-ex="ej4_srt_apropiativo" data-item="preemption_condition">
+          <div class="radio-card" data-val="remaining_less_than_current">
+            <div class="radio-card-header">Condición de Desalojo (Preemption)</div>
+            <div class="radio-card-body">Ocurre cuando un proceso ingresa a la lista de listos con un tiempo de ráfaga remanente estrictamente inferior al remanente del proceso actualmente en CPU.</div>
+          </div>
+          <div class="radio-card" data-val="quantum_timeout">
+            <div class="radio-card-header">Desalojo por Cuota de Tiempo</div>
+            <div class="radio-card-body">Ocurre cuando el temporizador de hardware interrumpe el ciclo de ejecución porque el proceso consumió su quantum de 2 ticks.</div>
+          </div>
+          <div class="radio-card" data-val="fixed_priority">
+            <div class="radio-card-header">Desalojo por Prioridad Fija</div>
+            <div class="radio-card-body">Ocurre únicamente si el proceso arribado tiene un valor de prioridad estática superior asignado por el administrador.</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-top:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Compromiso técnico (Trade-off) de SRT:</label>
+            <select class="custom-select" data-ex="ej4_srt_apropiativo" data-item="overhead_tradeoff">
+              <option value="">-- Seleccionar --</option>
+              <option value="context_switch_overhead">Minimiza el tiempo de espera promedio pero introduce mayor sobrecarga por frecuentes cambios de contexto y seguimiento de tiempos</option>
+              <option value="no_context_switch">Elimina completamente la sobrecarga del kernel al no requerir rutinas de salvado de registros</option>
+              <option value="convoy_generation">Genera efecto convoy crónico al favorecer ráfagas excesivamente largas</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Comportamiento con la carga de trabajo oficial respecto a SJN:</label>
+            <select class="custom-select" data-ex="ej4_srt_apropiativo" data-item="workload_comparison">
+              <option value="">-- Seleccionar --</option>
+              <option value="identical_to_sjn_on_bursts">En esta carga específica, debido a los instantes de desbloqueo, los promedios coinciden numéricamente con SJN (T=16.0, E=10.8)</option>
+              <option value="worse_than_fcfs">Presenta tiempos de espera peores que FCFS debido a bloqueos de E/S descontrolados</option>
+              <option value="starves_process_d">El proceso D nunca llega a ejecutar debido a que es desalojado infinitamente</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Riesgo de Inanición (Starvation) en SRT:</label>
+            <select class="custom-select" data-ex="ej4_srt_apropiativo" data-item="starvation_risk">
+              <option value="">-- Seleccionar --</option>
+              <option value="long_processes">Existe riesgo de inanición para procesos con ráfagas largas si ingresan continuamente trabajos con ráfagas cortas</option>
+              <option value="short_processes">Afecta exclusivamente a los procesos interactivos con ráfagas mínimas</option>
+              <option value="impossible">Es teóricamente imposible que ocurra inanición bajo cualquier política apropiativa</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositiva 11 (SRT: menor tiempo restante a continuación, Apropiativo).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.3.2 (Versión con desalojo de SJF, pp. 161–162).<br>
+            • <strong>Carretero:</strong> Cap. 3.4.3 (Primero el de menor tiempo restante, pp. 96–98).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 5 -->
+      <article class="exercise-card" id="card-ej5_round_robin">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 5 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Round Robin (q = 2): Gestión de Quantum y Cola Circular</h3>
+        <p class="ex-desc">Round Robin distribuye la CPU mediante cuotas fijas de tiempo (quantum). Analiza la resolución con quantum q = 2:</p>
+
+        <!-- Cinta interactiva con SortableJS para Orden de Finalización en Round Robin -->
+        <div class="sortable-strip-wrapper">
+          <div class="sortable-strip-header">
+            <span>🔀 <strong>Secuencia de Terminación en Round Robin (q = 2):</strong> Arrastra y ordena las 5 fichas de izquierda a derecha:</span>
+            <span id="rr-order-display" style="font-family:'Fira Code', monospace; font-size:0.85rem; font-weight:700; color:#38bdf8;">B ➔ A ➔ D ➔ C ➔ E</span>
+          </div>
+          <div class="sortable-strip" id="sortable-rr-order" data-ex="ej5_round_robin" data-item="final_order">
+            <div class="sortable-proc-card" data-proc="a">
+              <div class="sortable-proc-badge">Proceso A <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">CPU: 6, E/S: 3</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="b">
+              <div class="sortable-proc-badge">Proceso B <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">CPU: 4, E/S: 3</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="c">
+              <div class="sortable-proc-badge">Proceso C <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">CPU: 6, E/S: 6</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="d">
+              <div class="sortable-proc-badge">Proceso D <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">CPU: 5, E/S: 0</div>
+            </div>
+            <div class="sortable-proc-card" data-proc="e">
+              <div class="sortable-proc-badge">Proceso E <span class="sortable-handle">⠿</span></div>
+              <div class="sortable-proc-sub">CPU: 5, E/S: 2</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Acción al expirar el quantum de 2 ticks sin bloqueo:</label>
+            <select class="custom-select" data-ex="ej5_round_robin" data-item="quantum_expiration">
+              <option value="">-- Seleccionar --</option>
+              <option value="ready_queue_tail">El proceso es desalojado por el temporizador y se reencola al final de la cola de listos</option>
+              <option value="blocked_queue">El proceso se transfiere a la cola de bloqueados para esperar un nuevo ciclo</option>
+              <option value="suspended_disk">El proceso es expulsado a swap en memoria secundaria para liberar marcos de página</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Regla de Desempate en Cola de Listos (Criterio Oficial):</label>
+            <select class="custom-select" data-ex="ej5_round_robin" data-item="tie_breaker_order">
+              <option value="">-- Seleccionar Criterio --</option>
+              <option value="llegadas_desbloqueos_quantum">1° Nuevas llegadas, 2° Retorno de desbloqueos de E/S, 3° Fin de Quantum</option>
+              <option value="quantum_desbloqueos_llegadas">1° Fin de Quantum, 2° Desbloqueos, 3° Nuevas llegadas</option>
+              <option value="prioridad_estatica">1° Prioridad estática, 2° PID numérico, 3° Orden alfabético</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Efecto de configurar un quantum excesivamente grande (q ➔ ∞):</label>
+            <select class="custom-select" data-ex="ej5_round_robin" data-item="quantum_impact_large">
+              <option value="">-- Seleccionar --</option>
+              <option value="approaches_fcfs">El comportamiento del planificador degenera en una política FCFS (FIFO)</option>
+              <option value="approaches_sjf">El algoritmo se transforma en SJF al priorizar ráfagas cortas de forma espontánea</option>
+              <option value="high_overhead">La sobrecarga de cambios de contexto colapsa la capacidad del procesador</option>
+            </select>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 11 y 12 (Round Robin: Quantum circular, equitativo).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.3.4 (Planificación por turno rotatorio - Round Robin, pp. 164–167).<br>
+            • <strong>Stallings (5ta Ed.):</strong> Cap. 9.2 (Turno rotatorio / Round-Robin, pp. 393–396).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 6 -->
+      <article class="exercise-card" id="card-ej6_prioridad_apropiativa">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 6 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Planificación por Prioridad Apropiativa e Inanición (Aging)</h3>
+        <p class="ex-desc">En la cátedra se aplica la convención donde <strong>a mayor número, mayor nivel de prioridad</strong>. Analiza la ejecución de esta política:</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Convención de escala de prioridad oficial:</label>
+            <select class="custom-select" data-ex="ej6_prioridad_apropiativa" data-item="priority_scale">
+              <option value="">-- Seleccionar Escala --</option>
+              <option value="higher_number_higher_priority">Mayor valor numérico representa mayor prioridad: Prioridad 3 > 2 > 1 > 0</option>
+              <option value="lower_number_higher_priority">Menor valor numérico representa mayor prioridad: Prioridad 0 > 1 > 2 > 3</option>
+              <option value="identical_all">Todos los procesos tienen igual prioridad y desempatan por PID</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">En t = 0 arriban A (Prioridad 0) y C (Prioridad 2). ¿Quién toma la CPU?:</label>
+            <select class="custom-select" data-ex="ej6_prioridad_apropiativa" data-item="first_dispatched">
+              <option value="">-- Seleccionar --</option>
+              <option value="c">Proceso C (ejecuta primero por poseer mayor prioridad: 2 > 0)</option>
+              <option value="a">Proceso A (ejecuta primero por tener menor número de prioridad 0)</option>
+              <option value="b">Proceso B (ejecuta por orden alfabético)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Evento de desalojo en t = 5 con la llegada del Proceso D:</label>
+            <select class="custom-select" data-ex="ej6_prioridad_apropiativa" data-item="preemption_event">
+              <option value="">-- Seleccionar --</option>
+              <option value="arrival_d_at_5">D arriba en t=5 con Prioridad 3 (la más alta de todas), desalojando de inmediato la CPU</option>
+              <option value="no_preemption">D debe esperar en la cola de listos a que termine el proceso en ejecución</option>
+              <option value="quantum_yield">D comparte la CPU alternando quantums de 1 tick con el proceso en ejecución</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Técnica del SO para evitar inanición de procesos con baja prioridad:</label>
+            <select class="custom-select" data-ex="ej6_prioridad_apropiativa" data-item="starvation_solution">
+              <option value="">-- Seleccionar Técnica --</option>
+              <option value="aging">Envejecimiento (Aging): aumentar gradualmente la prioridad del proceso conforme acumula tiempo en espera</option>
+              <option value="random_boost">Sorteo estocástico aleatorio de billetes de lotería para asignar tiempo de CPU</option>
+              <option value="swap_eviction">Expulsión obligatoria del proceso a memoria virtual en disco</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 11 y 12 (Prioridades fijas/dinámicas, Apropiativo/No Apropiativo).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.3.3 (Planificación por prioridad e inanición/envejecimiento, pp. 162–164).<br>
+            • <strong>Carretero:</strong> Cap. 3.4.4 (Planificación por prioridades, pp. 98–101).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 7 -->
+      <article class="exercise-card" id="card-ej7_hrn_algoritmo">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 7 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Algoritmo HRN (Highest Response Ratio Next)</h3>
+        <p class="ex-desc">HRN es un algoritmo no apropiativo que corrige la debilidad de SJN integrando el tiempo de espera acumulado en su fórmula de prioridad dinámica:</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Fórmula de prioridad dinámica oficial en HRN:</label>
+            <select class="custom-select" data-ex="ej7_hrn_algoritmo" data-item="formula_definition">
+              <option value="">-- Seleccionar Fórmula --</option>
+              <option value="ratio_service_wait">P = (t + w) / t = 1 + (w / t), donde w es espera acumulada y t es tiempo de servicio</option>
+              <option value="ratio_inverse">P = t / (t + w), dando prioridad inversa al tiempo transcurrido</option>
+              <option value="linear_wait">P = w - t, restando directamente la ráfaga al tiempo en lista de listos</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Tipo de planificación de HRN:</label>
+            <select class="custom-select" data-ex="ej7_hrn_algoritmo" data-item="preemption_type">
+              <option value="">-- Seleccionar --</option>
+              <option value="no_apropiativo">No Apropiativo: la prioridad se calcula únicamente cuando la CPU queda libre para despachar</option>
+              <option value="apropiativo">Apropiativo: recalcula el ratio en cada microsegundo y desaloja inmediatamente</option>
+              <option value="multinivel">Multinivel: transfiere los procesos a distintas colas de prioridad estática</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Comportamiento frente a la inanición (Starvation):</label>
+            <select class="custom-select" data-ex="ej7_hrn_algoritmo" data-item="starvation_behavior">
+              <option value="">-- Seleccionar --</option>
+              <option value="prevents_starvation">Previene la inanición: a medida que un proceso largo espera, su valor w aumenta elevando monótonamente su ratio P</option>
+              <option value="causes_starvation">Provoca inanición severa de procesos cortos debido al envejecimiento inverso</option>
+              <option value="ignores_wait">No contempla el tiempo de espera por lo que actúa igual que FCFS</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Primer proceso en finalizar completamente en HRN:</label>
+            <select class="custom-select" data-ex="ej7_hrn_algoritmo" data-item="first_finished">
+              <option value="">-- Seleccionar Proceso --</option>
+              <option value="a">Proceso A (completa su ejecución en t = 14 con espera E = 8)</option>
+              <option value="c">Proceso C (completa su ejecución en t = 16 con espera E = 10)</option>
+              <option value="d">Proceso D (completa su ejecución en t = 10 con espera E = 0)</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositiva 11 (HRN: Se calcula una prioridad para cada proceso P = [t+w]/t, No Apropiativo).<br>
+            • <strong>Stallings (5ta Ed.):</strong> Cap. 9.2 (Mayor tasa de respuesta a continuación / HRRN, pp. 402–404).<br>
+            • <strong>Carretero:</strong> Cap. 3.4.5 (El siguiente con mayor relación de respuesta, pp. 101–103).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 8 -->
+      <article class="exercise-card" id="card-ej8_matriz_comparativa_multicriterio">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 8 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Matriz Multicriterio Comparativa sobre la Carga de Trabajo</h3>
+        <p class="ex-desc">Apoyándote en el simulador interactivo y en el gráfico comparativo de métricas de cátedra, clasifica los resultados de los 6 algoritmos:</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">¿Qué algoritmo logra el Menor Tiempo de Espera Promedio general?:</label>
+            <select class="custom-select" data-ex="ej8_matriz_comparativa_multicriterio" data-item="min_avg_wait">
+              <option value="">-- Seleccionar Algoritmo --</option>
+              <option value="prioridad_apropiativa">Prioridad Apropiativa (E Promedio = 10.4 ticks, seguido por SJN/SRT con 10.8)</option>
+              <option value="fcfs">FCFS (E Promedio = 13.0 ticks)</option>
+              <option value="round_robin">Round Robin q=2 (E Promedio = 14.0 ticks)</option>
+              <option value="hrn">HRN (E Promedio = 13.0 ticks)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">¿Qué algoritmo garantiza Máxima Equidad en entornos interactivos?:</label>
+            <select class="custom-select" data-ex="ej8_matriz_comparativa_multicriterio" data-item="max_fairness_interactive">
+              <option value="">-- Seleccionar Algoritmo --</option>
+              <option value="round_robin">Round Robin (reparto cíclico y equitativo de tiempo de CPU sin monopolización)</option>
+              <option value="fcfs">FCFS (reparto estrictamente basado en orden de llegada sin expulsión)</option>
+              <option value="prioridad_apropiativa">Prioridad Apropiativa (favorece exclusivamente a trabajos con etiqueta alta)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">¿En qué algoritmo el Proceso C sufre la Mayor Espera Acumulada (E = 21)?:</label>
+            <select class="custom-select" data-ex="ej8_matriz_comparativa_multicriterio" data-item="highest_wait_c">
+              <option value="">-- Seleccionar Algoritmo --</option>
+              <option value="fcfs">En FCFS (queda relegado detrás de múltiples ráfagas largas y bloqueos de otros procesos)</option>
+              <option value="sjn">En SJN (su ráfaga corta le permite ejecutar rápidamente)</option>
+              <option value="priority">En Prioridad (su prioridad 2 lo privilegia sobre A, B y E)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Mayor penalización individual registrada en toda la práctica:</label>
+            <select class="custom-select" data-ex="ej8_matriz_comparativa_multicriterio" data-item="overall_most_penalized">
+              <option value="">-- Seleccionar Caso --</option>
+              <option value="a_in_prioridad">Proceso A en Prioridad Apropiativa (IP = 4.83, pasa 23 ticks esperando al tener prioridad 0)</option>
+              <option value="d_in_fcfs">Proceso D en FCFS (IP = 1.60)</option>
+              <option value="b_in_rr">Proceso B en Round Robin (IP = 3.00)</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Planillas y Resoluciones de Cátedra:</strong> FCFS.html, SJN.html, SRT.html, RR q=2.html, Prioridad Apropiativo.html, HRN.html.<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.4 (Evaluación de algoritmos, pp. 167–173).<br>
+            • <strong>Stallings:</strong> Cap. 9.2 (Comparación de políticas, pp. 404–409).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 9 -->
+      <article class="exercise-card" id="card-ej9_planificacion_multiprocesadores">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 9 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Planificación en Sistemas Multiprocesador y Afinidad de CPU</h3>
+        <p class="ex-desc">En las arquitecturas multinúcleo modernas, el planificador enfrenta nuevos desafíos de coordinación y contención de recursos (Diapositiva 17 de teoría):</p>
+
+        <div class="radio-cards-grid" data-ex="ej9_planificacion_multiprocesadores" data-item="resource_contention">
+          <div class="radio-card" data-val="shared_memory_bus">
+            <div class="radio-card-header">Contención de Recursos</div>
+            <div class="radio-card-body">Múltiples núcleos de procesamiento compiten simultáneamente por recursos de hardware compartidos como el bus de sistema, cachés L3 compartidas e interfaces de memoria principal.</div>
+          </div>
+          <div class="radio-card" data-val="disk_head_collision">
+            <div class="radio-card-header">Colisión Mecánica de Discos</div>
+            <div class="radio-card-body">Los brazos de lectura del almacenamiento magnético chocan mecánicamente al recibir órdenes paralelas de distintos procesadores.</div>
+          </div>
+        </div>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-top:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Afinidad a Procesador (Processor Affinity):</label>
+            <select class="custom-select" data-ex="ej9_planificacion_multiprocesadores" data-item="processor_affinity">
+              <option value="">-- Seleccionar --</option>
+              <option value="cache_locality">Intención del SO de mantener un hilo en el mismo núcleo para aprovechar las líneas de datos calientes ya cargadas en su memoria caché (localidad)</option>
+              <option value="exclusive_hardware">Asignación permanente y exclusiva de un núcleo físico impidiendo la ejecución de cualquier otra tarea</option>
+              <option value="virtual_memory_disable">Desactivación de la paginación para acceder directamente a direcciones físicas de memoria</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Balanceo de Carga (Load Balancing):</label>
+            <select class="custom-select" data-ex="ej9_planificacion_multiprocesadores" data-item="load_balancing">
+              <option value="">-- Seleccionar --</option>
+              <option value="migration_balance">Estrategias Push/Pull migration para redistribuir la carga de colas entre núcleos y evitar que unos queden ociosos mientras otros están sobrecargados</option>
+              <option value="cpu_shutdown">Apagar dinámicamente los núcleos secundarios para forzar a que un solo core ejecute todo el sistema</option>
+              <option value="static_allocation">Asignar procesos de forma inmutable al arrancar el sistema sin posibilidad de migración</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositiva 17 (Planificación en Multiprocesadores: Contención, Alojamiento de tareas, Políticas combinadas).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.5 (Planificación de multiprocesadores: Afinidad, balanceo de carga, pp. 167–170).<br>
+            • <strong>Stallings (5ta Ed.):</strong> Cap. 10.1 (Planificación multiprocesador, pp. 427–436).
+          </div>
+        </details>
+      </article>
+
+      <!-- EJERCICIO 10 -->
+      <article class="exercise-card" id="card-ej10_evaluacion_seleccion_politicas">
+        <div class="ex-top">
+          <span style="font-size:0.8rem; font-weight:700; color:var(--accent-blue);">EJERCICIO 10 (10 PUNTOS)</span>
+          <span class="ex-badge pending">Pendiente</span>
+        </div>
+        <h3 class="ex-title">Evaluación y Selección de Políticas en Sistemas Operativos</h3>
+        <p class="ex-desc">La ingeniería de sistemas operativos requiere seleccionar o combinar algoritmos de acuerdo con los objetivos del entorno (Diapositiva 18 de la teoría):</p>
+
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:14px; margin-bottom:16px;">
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Principio de Selección de Algoritmos (Regla de Oro):</label>
+            <select class="custom-select" data-ex="ej10_evaluacion_seleccion_politicas" data-item="golden_rule">
+              <option value="">-- Seleccionar --</option>
+              <option value="no_perfect_algorithm">No existe un algoritmo perfecto universal: la elección depende de los objetivos y compromisos de diseño del sistema</option>
+              <option value="fcfs_is_optimal">FCFS es siempre la mejor opción en cualquier sistema debido a su simplicidad absoluta</option>
+              <option value="hardware_dictates">El algoritmo viene grabado en la ROM del procesador y no puede ser alterado por el sistema operativo</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Mejor política para Sistemas de Escritorio / Interactivos:</label>
+            <select class="custom-select" data-ex="ej10_evaluacion_seleccion_politicas" data-item="interactive_system">
+              <option value="">-- Seleccionar --</option>
+              <option value="round_robin_priority">Round Robin combinado con Prioridades Dinámicas para asegurar tiempos de respuesta rápidos y equidad</option>
+              <option value="fcfs_strict">FCFS estricto sin desalojo para maximizar el uso continuo de la memoria caché</option>
+              <option value="sjf_pure">SJF puro no apropiativo asumiendo que los programas interactivos siempre terminan de inmediato</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Mejor política para Servidores por Lotes (Batch Processing):</label>
+            <select class="custom-select" data-ex="ej10_evaluacion_seleccion_politicas" data-item="batch_throughput">
+              <option value="">-- Seleccionar --</option>
+              <option value="sjf_srt">SJF / SRT para maximizar el rendimiento (Throughput) y minimizar los tiempos medios de retorno</option>
+              <option value="round_robin_tiny_quantum">Round Robin con quantum microscópico para multiplicar las transiciones de estado</option>
+              <option value="random_order">Despacho en orden aleatorio estocástico para evitar predicciones estadísticas</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:0.84rem; font-weight:600; color:var(--text-secondary); display:block; margin-bottom:6px;">Costo de un Quantum Excesivamente Pequeño en RR:</label>
+            <select class="custom-select" data-ex="ej10_evaluacion_seleccion_politicas" data-item="context_switch_cost">
+              <option value="">-- Seleccionar --</option>
+              <option value="throughput_penalty">Degrada el Throughput útil porque la CPU pasa más tiempo guardando y cargando registros (overhead) que ejecutando código</option>
+              <option value="memory_leak">Genera fugas de memoria irrecuperables en el montículo (Heap) de los programas de usuario</option>
+              <option value="instant_deadlock">Produce interbloqueos fatales en los controladores de interrupciones del kernel</option>
+            </select>
+          </div>
+        </div>
+
+        <details class="biblio-collapse">
+          <summary>📖 Dónde estudiar este tema en la bibliografía</summary>
+          <div class="biblio-collapse-content">
+            • <strong>Diapositivas Cátedra (Ing. Vázquez):</strong> Clase 4, Diapositivas 18 y 19 (Evaluación de algoritmos, Conclusión: El arte de la concurrencia).<br>
+            • <strong>Silberschatz (7ma Ed.):</strong> Cap. 5.6 (Evaluación de algoritmos y modelos deterministas, pp. 170–175).<br>
+            • <strong>Tanenbaum (3ra Ed.):</strong> Cap. 2.4.5 (Evaluación de políticas de planificación, pp. 154–158).
+          </div>
+        </details>
+      </article>
+
+    </main>
+
+    <!-- ==================== MODALES ==================== -->
+    <div class="modal-backdrop" id="modal-git">
+      <div class="modal-window">
+        <button class="modal-close-btn">&times;</button>
+        <h3 style="margin-bottom:14px; color:#60a5fa; font-size:1.3rem;">🚀 Flujo de Entrega con Git, GitHub y Autograding CI</h3>
+        <p style="color:var(--text-secondary); font-size:0.92rem; margin-bottom:14px;">Para completar y certificar tu Trabajo Práctico, sigue estos pasos oficiales:</p>
+        <ol style="color:var(--text-secondary); font-size:0.9rem; padding-left:20px; display:flex; flex-direction:column; gap:10px; line-height:1.5;">
+          <li><strong>Fork:</strong> Accede a la organización oficial de la cátedra <code>https://github.com/UNJU-Teoria-de-Sistemas-Operativos/TP3</code> y haz Fork en tu cuenta.</li>
+          <li><strong>Clone:</strong> Clona tu fork en tu computadora local: <br><code>git clone https://github.com/TU_USUARIO/TP3.git</code></li>
+          <li><strong>Resolución:</strong> Abre <code>index.html</code> en tu navegador, experimenta con el simulador y completa los 10 ejercicios.</li>
+          <li><strong>Exportación:</strong> Al llegar al 100%, pulsa <strong>"Exportar Respuestas (.json)"</strong> y coloca el archivo descargado <code>respuestas_tp3.json</code> en la raíz del repositorio clonado.</li>
+          <li><strong>Autoevaluación Local (Opcional):</strong> Si tienes Python 3 instalado, prueba localmente: <br><code>python autograder_tp3.py respuestas_tp3.json</code></li>
+          <li><strong>Entrega (Push):</strong> Realiza commit y push hacia GitHub:
+            <pre style="background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; margin-top:6px; font-family:'Fira Code', monospace; font-size:0.82rem; color:#38bdf8;">git add respuestas_tp3.json
+git commit -m "Entrega TP3 - [Tu Nombre]"
+git push origin main</pre>
+          </li>
+          <li><strong>Calificación Automática:</strong> GitHub Actions evaluará tu entrega en segundos emitiendo una insignia verde <code>✅ Check</code> o roja <code>❌</code> con tu nota y reporte en la pestaña <em>Actions</em>.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="modal-backdrop" id="modal-biblio">
+      <div class="modal-window">
+        <button class="modal-close-btn">&times;</button>
+        <h3 style="margin-bottom:14px; color:#fbbf24; font-size:1.3rem;">📚 Cuadro Bibliográfico Oficial de Cátedra</h3>
+        <div style="font-size:0.9rem; color:var(--text-secondary); display:flex; flex-direction:column; gap:12px; line-height:1.6;">
+          <p><strong>1. Silberschatz, Galvin, Gagne:</strong> <em>Fundamentos de Sistemas Operativos</em> (7ma Ed.):<br>
+          • Cap. 5: Planificación de la CPU (Conceptos, Criterios, FCFS, SJF, SRT, Prioridades, Round Robin, Multiprocesadores y Evaluación, pp. 153–175).</p>
+          <p><strong>2. William Stallings:</strong> <em>Sistemas Operativos: Aspectos Internos y Principios de Diseño</em> (5ta Ed.):<br>
+          • Cap. 9: Planificación Uniprocesador (Criterios, Turno rotatorio, HRRN / HRN, Comparativas, pp. 385–412).<br>
+          • Cap. 10.1: Planificación Multiprocesador (pp. 427–436).</p>
+          <p><strong>3. Carretero, García, De Miguel, Pérez:</strong> <em>Sistemas Operativos: Una Visión Aplicada</em>:<br>
+          • Cap. 3: Planificación de Procesos (Algoritmos clásicos, tiempos de servicio y penalización, pp. 81–118).</p>
+          <p><strong>4. Andrew S. Tanenbaum:</strong> <em>Sistemas Operativos: Diseño e Implementación</em> (3ra Ed.):<br>
+          • Cap. 2.4: Planificación de Procesos (pp. 136–158).</p>
+          <p><strong>5. Diapositivas Oficiales de Cátedra:</strong> Ing. María Fernanda Vázquez:<br>
+          • Clase 4: Unidad 3 — Planificación de Procesos (20 Diapositivas con ejemplos resueltos).</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

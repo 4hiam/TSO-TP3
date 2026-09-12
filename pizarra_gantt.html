@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizarra de Planificación Digital | TSO - UNJu FI</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+  <style>
+    /* Estilos Específicos de la Pizarra Digital */
+    .pizarra-toolbar {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .tool-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .brush-btn {
+      font-family: inherit;
+      font-size: 0.86rem;
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: var(--radius-sm);
+      border: 2px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .brush-btn.active {
+      transform: scale(1.05);
+      box-shadow: 0 0 15px currentColor;
+    }
+
+    .brush-btn.brush-cpu { color: #10b981; }
+    .brush-btn.brush-cpu.active { background: rgba(16,185,129,0.2); border-color: #10b981; }
+
+    .brush-btn.brush-wait { color: #f59e0b; }
+    .brush-btn.brush-wait.active { background: rgba(245,158,11,0.2); border-color: #f59e0b; }
+
+    .brush-btn.brush-io { color: #f97316; }
+    .brush-btn.brush-io.active { background: rgba(249,115,22,0.2); border-color: #f97316; }
+
+    .brush-btn.brush-eraser { color: #94a3b8; }
+    .brush-btn.brush-eraser.active { background: rgba(148,163,184,0.2); border-color: #94a3b8; }
+
+    /* Canvas Grid */
+    .pizarra-canvas-wrapper {
+      background: var(--bg-card);
+      backdrop-filter: var(--blur);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-glass);
+      overflow-x: auto;
+    }
+
+    .pizarra-grid {
+      display: grid;
+      grid-template-columns: 240px repeat(30, minmax(32px, 1fr));
+      gap: 2px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      min-width: 1200px;
+      user-select: none;
+    }
+
+    .grid-header-cell {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 8px 2px;
+      text-align: center;
+      color: var(--text-muted);
+      font-weight: 700;
+      border-radius: 3px;
+    }
+
+    .grid-header-cell.conflict-col {
+      background: rgba(239, 68, 68, 0.25);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+      animation: pulse-red 1s infinite alternate;
+    }
+
+    @keyframes pulse-red {
+      0% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
+
+    .process-sidebar-card {
+      background: var(--bg-card-elevated);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 3px;
+    }
+
+    .process-badge-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .process-burst-progress {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .pizarra-cell {
+      height: 38px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: crosshair;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 0.8rem;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .pizarra-cell:hover {
+      border-color: rgba(255, 255, 255, 0.3);
+      transform: scale(0.98);
+    }
+
+    .pizarra-cell.cell-cpu {
+      background: var(--state-cpu);
+      color: #064e3b;
+      box-shadow: 0 0 8px var(--state-cpu-glow);
+    }
+
+    .pizarra-cell.cell-wait {
+      background: var(--state-wait);
+      color: #78350f;
+    }
+
+    .pizarra-cell.cell-io {
+      background: var(--state-io);
+      color: #7c2d12;
+    }
+
+    /* Filas Inferiores de Trazabilidad */
+    .track-row-label {
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      border-radius: 3px;
+    }
+
+    .track-cell {
+      height: 32px;
+      border-radius: 3px;
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Alerta de Diagnóstico */
+    .diagnostic-banner {
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: var(--radius-md);
+      padding: 14px 18px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .diagnostic-banner.has-errors {
+      background: rgba(239, 68, 68, 0.12);
+      border-color: rgba(239, 68, 68, 0.35);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header class="header-hero">
+      <div class="header-meta">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <span class="badge-tag green">🎓 UNJu — Facultad de Ingeniería</span>
+          <span class="badge-tag purple">Teoría de Sistemas Operativos</span>
+          <span class="badge-tag cyan">Pizarra Digital</span>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <a href="index.html" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;">⬅ Volver al TP3</a>
+          <button id="theme-toggle-btn" class="btn btn-secondary" style="padding: 4px 12px; font-size: 0.8rem;">🌓 Tema</button>
+        </div>
+      </div>
+
+      <h1 class="main-title">Pizarra de Planificación Digital (Gantt Studio)</h1>
+      <p class="subtitle">Herramienta gráfica nativa para maquetar, pintar y auditar cronogramas de CPU instante a instante, con diagnóstico de hardware en tiempo real.</p>
+    </header>
+
+    <!-- Toolbar de Herramientas -->
+    <div class="pizarra-toolbar">
+      <div class="tool-group">
+        <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase;">Pincel:</span>
+        <button class="brush-btn brush-cpu active" data-brush="cpu">
+          <span>🟩 CPU [C]</span>
+        </button>
+        <button class="brush-btn brush-wait" data-brush="wait">
+          <span>🟨 Espera [E]</span>
+        </button>
+        <button class="brush-btn brush-io" data-brush="io">
+          <span>🟧 E/S Bloqueo [B]</span>
+        </button>
+        <button class="brush-btn brush-eraser" data-brush="eraser">
+          <span>🧽 Borrador [X]</span>
+        </button>
+      </div>
+
+      <div class="tool-group">
+        <select id="algo-comparator-select" class="custom-select" style="width: auto; padding: 6px 12px; font-size:0.84rem;">
+          <option value="">-- Comparar con Algoritmo --</option>
+          <option value="fcfs">FCFS (Primero en Llegar)</option>
+          <option value="sjn">SJN / SJF (No Apropiativo)</option>
+          <option value="srt">SRT (Apropiativo)</option>
+          <option value="rr">Round Robin (q = 2)</option>
+          <option value="priority">Prioridad Apropiativa</option>
+          <option value="hrn">HRN (Ratio de Respuesta)</option>
+        </select>
+        <button class="btn btn-outline-blue" id="btn-audit-grid">🔍 Auditar con Kernel</button>
+        <button class="btn btn-outline-amber" id="btn-fill-official">🪄 Rellenar Solución</button>
+        <button class="btn btn-secondary" id="btn-clear-canvas">🧹 Limpiar Pizarra</button>
+      </div>
+    </div>
+
+    <!-- Banner de Diagnóstico de Hardware en Tiempo Real -->
+    <div class="diagnostic-banner" id="diagnostic-banner">
+      <div id="diagnostic-text" style="font-size:0.9rem; color:var(--text-primary);">
+        ✨ <strong>Pizarra Lista:</strong> Haz clic o arrastra el cursor para pintar los ticks de cada proceso. Atajos de teclado: <kbd>C</kbd> (CPU), <kbd>E</kbd> (Espera), <kbd>B</kbd> (E/S), <kbd>X</kbd> (Borrar).
+      </div>
+      <div id="diagnostic-badge" class="badge-tag green">✓ Sin Conflictos</div>
+    </div>
+
+    <!-- Canvas Grid Interactivo -->
+    <div class="pizarra-canvas-wrapper">
+      <div class="pizarra-grid" id="pizarra-grid">
+        <!-- Renderizado dinámico con JavaScript -->
+      </div>
+    </div>
+
+    <!-- Tabla Dinámica de Métricas Calculadas en Vivo -->
+    <div class="table-card" style="margin-bottom: 30px;">
+      <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">
+        📊 Métricas Calculadas Dinámicamente desde Tu Pizarra (Sin Fórmulas de Excel)
+      </h4>
+      <div style="overflow-x: auto;">
+        <table class="metrics-table">
+          <thead>
+            <tr>
+              <th>Proceso</th>
+              <th>t Llegada (ti)</th>
+              <th>t Fin (tf)</th>
+              <th>Servicio (t)</th>
+              <th>Retorno (T = tf - ti)</th>
+              <th>Espera (E = T - t)</th>
+              <th>IP (T / t)</th>
+              <th>IR (t / T)</th>
+            </tr>
+          </thead>
+          <tbody id="live-metrics-body">
+            <!-- Renderizado dinámico -->
+          </tbody>
+          <tfoot>
+            <tr class="averages-row" id="live-averages-row">
+              <!-- Renderizado dinámico -->
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Carga de Trabajo Oficial (UNJu FI - TSO 2026)
+    const PROCESSES = [
+      { id: "A", arrival: 0, cpuBursts: [1, 2, 3], ioBursts: [1, 2], priority: 0, totalCpu: 6, totalIo: 3 },
+      { id: "B", arrival: 2, cpuBursts: [2, 2], ioBursts: [3], priority: 1, totalCpu: 4, totalIo: 3 },
+      { id: "C", arrival: 0, cpuBursts: [2, 1, 2, 1], ioBursts: [1, 2, 3], priority: 2, totalCpu: 6, totalIo: 6 },
+      { id: "D", arrival: 5, cpuBursts: [5], ioBursts: [], priority: 3, totalCpu: 5, totalIo: 0 },
+      { id: "E", arrival: 6, cpuBursts: [3, 2], ioBursts: [2], priority: 1, totalCpu: 5, totalIo: 2 }
+    ];
+
+    const TOTAL_TICKS = 30;
+
+    // Matriz de Usuario: gridData[procId][tick] = 'none' | 'cpu' | 'wait' | 'io'
+    const gridData = {};
+    let activeBrush = "cpu";
+    let isMouseDown = false;
+
+    // Referencias DOM cacheadas para máximo rendimiento sin DOM thrashing
+    const domCells = {}; // domCells[procId][tick]
+    const domHeaders = []; // domHeaders[tick]
+    const domSidebarCounters = {}; // domSidebarCounters[procId] = { cpu: el, io: el }
+    const domTrackCells = { ready: [], cpu: [], io: [] };
+
+    // Soluciones Oficiales de la Cátedra (Fidelidad 100% con Excel Oficial Resolucion TP2-2025)
+    const OFFICIAL_SOLUTIONS = {
+      fcfs: {
+        A: ["cpu","io","wait","wait","wait","cpu","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","cpu","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none"]
+      },
+      sjn: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","cpu","io","io","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","none","none","none","none"]
+      },
+      srt: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","cpu","io","io","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","cpu","cpu","cpu","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","cpu","cpu","none","none","none","none","none","none","none"]
+      },
+      rr: {
+        A: ["cpu","io","wait","wait","wait","cpu","cpu","io","io","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","cpu","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","cpu","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","cpu","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","wait","wait","wait","cpu","io","io","wait","cpu","cpu","none","none","none","none"]
+      },
+      priority: {
+        A: ["wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","io","wait","wait","cpu","cpu","io","io","cpu","cpu","cpu","none"],
+        B: ["none","none","cpu","wait","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["cpu","cpu","io","cpu","io","io","wait","wait","wait","wait","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","cpu","wait","cpu","cpu","io","io","cpu","cpu","none","none","none","none","none","none","none","none"]
+      },
+      hrn: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none"]
+      }
+    };
+
+    function initData() {
+      PROCESSES.forEach(p => {
+        gridData[p.id] = new Array(TOTAL_TICKS).fill("none");
+        domCells[p.id] = [];
+      });
+    }
+
+    const gridContainer = document.querySelector("#pizarra-grid");
+
+    // Construcción Única del DOM de la Cuadrícula
+    function buildGridDOM() {
+      if (!gridContainer) return;
+      gridContainer.innerHTML = "";
+
+      // 1. Fila de Encabezado (Ticks 0..29)
+      const headLabel = document.createElement("div");
+      headLabel.className = "grid-header-cell";
+      headLabel.style.textAlign = "left";
+      headLabel.style.paddingLeft = "12px";
+      headLabel.textContent = "Procesos / Ticks";
+      gridContainer.appendChild(headLabel);
+
+      for (let t = 0; t < TOTAL_TICKS; t++) {
+        const th = document.createElement("div");
+        th.className = "grid-header-cell";
+        th.id = `head-t-${t}`;
+        th.textContent = t;
+        gridContainer.appendChild(th);
+        domHeaders[t] = th;
+      }
+
+      // 2. Filas de Procesos
+      PROCESSES.forEach(p => {
+        // Sidebar Card
+        const card = document.createElement("div");
+        card.className = "process-sidebar-card";
+        card.innerHTML = `
+          <div class="process-badge-line">
+            <span>Proceso ${p.id}</span>
+            <span style="font-size:0.75rem; color:#38bdf8;">Prio: ${p.priority} | ti: ${p.arrival}</span>
+          </div>
+          <div class="process-burst-progress">
+            <span id="counter-cpu-${p.id}">CPU: 0/${p.totalCpu}</span>
+            <span id="counter-io-${p.id}">E/S: 0/${p.totalIo}</span>
+          </div>
+        `;
+        gridContainer.appendChild(card);
+
+        domSidebarCounters[p.id] = {
+          cpu: card.querySelector(`#counter-cpu-${p.id}`),
+          io: card.querySelector(`#counter-io-${p.id}`)
+        };
+
+        // Celdas de Ticks
+        for (let t = 0; t < TOTAL_TICKS; t++) {
+          const cell = document.createElement("div");
+          cell.className = "pizarra-cell";
+          cell.setAttribute("data-proc", p.id);
+          cell.setAttribute("data-tick", t);
+          gridContainer.appendChild(cell);
+          domCells[p.id][t] = cell;
+        }
+      });
+
+      // 3. Filas de Trazabilidad Dinámica
+      // Fila Listos
+      const readyLabel = document.createElement("div");
+      readyLabel.className = "track-row-label";
+      readyLabel.innerHTML = "📋 Cola de Listos";
+      gridContainer.appendChild(readyLabel);
+
+      for (let t = 0; t < TOTAL_TICKS; t++) {
+        const rc = document.createElement("div");
+        rc.className = "track-cell";
+        rc.style.color = "#fbbf24";
+        rc.textContent = "-";
+        gridContainer.appendChild(rc);
+        domTrackCells.ready[t] = rc;
+      }
+
+      // Fila CPU
+      const cpuLabel = document.createElement("div");
+      cpuLabel.className = "track-row-label";
+      cpuLabel.innerHTML = "⚡ CPU Activa";
+      gridContainer.appendChild(cpuLabel);
+
+      for (let t = 0; t < TOTAL_TICKS; t++) {
+        const cc = document.createElement("div");
+        cc.className = "track-cell";
+        cc.style.color = "#34d399";
+        cc.style.fontWeight = "800";
+        cc.textContent = "-";
+        gridContainer.appendChild(cc);
+        domTrackCells.cpu[t] = cc;
+      }
+
+      // Fila E/S
+      const ioLabel = document.createElement("div");
+      ioLabel.className = "track-row-label";
+      ioLabel.innerHTML = "💾 En Bloqueo E/S";
+      gridContainer.appendChild(ioLabel);
+
+      for (let t = 0; t < TOTAL_TICKS; t++) {
+        const ic = document.createElement("div");
+        ic.className = "track-cell";
+        ic.style.color = "#fb923c";
+        ic.textContent = "-";
+        gridContainer.appendChild(ic);
+        domTrackCells.io[t] = ic;
+      }
+
+      setupGridInteractions();
+    }
+
+    // Actualización Reactiva de una Celda Específica (O(1), sin innerHTML)
+    function setCellState(procId, tick, state, skipMetrics = false) {
+      gridData[procId][tick] = state;
+      const cell = domCells[procId][tick];
+      if (!cell) return;
+
+      cell.className = "pizarra-cell";
+      let label = "";
+      if (state === "cpu") {
+        cell.classList.add("cell-cpu");
+        label = "CPU";
+      } else if (state === "wait") {
+        cell.classList.add("cell-wait");
+        label = "E";
+      } else if (state === "io") {
+        cell.classList.add("cell-io");
+        label = "B";
+      }
+      cell.textContent = label;
+
+      // Actualizar contadores del proceso
+      const p = PROCESSES.find(x => x.id === procId);
+      if (p && domSidebarCounters[procId]) {
+        const cpuCount = gridData[procId].filter(s => s === "cpu").length;
+        const ioCount = gridData[procId].filter(s => s === "io").length;
+        domSidebarCounters[procId].cpu.textContent = `CPU: ${cpuCount}/${p.totalCpu}`;
+        domSidebarCounters[procId].io.textContent = `E/S: ${ioCount}/${p.totalIo}`;
+        if (cpuCount > p.totalCpu) domSidebarCounters[procId].cpu.style.color = "#ef4444";
+        else domSidebarCounters[procId].cpu.style.color = "";
+      }
+
+      // Actualizar columna (trazabilidad y encabezado)
+      updateColumnTrack(tick);
+
+      if (!skipMetrics) {
+        updateDiagnostics();
+        calculateLiveMetrics();
+      }
+    }
+
+    // Actualiza la columna de trazabilidad del tick t
+    function updateColumnTrack(t) {
+      // Conflicto de CPU
+      const cpuProcs = PROCESSES.filter(p => gridData[p.id][t] === "cpu").map(p => p.id);
+      const isConflict = cpuProcs.length > 1;
+
+      if (domHeaders[t]) {
+        if (isConflict) domHeaders[t].classList.add("conflict-col");
+        else domHeaders[t].classList.remove("conflict-col");
+      }
+
+      if (domTrackCells.cpu[t]) {
+        domTrackCells.cpu[t].textContent = cpuProcs.join(",") || "-";
+        domTrackCells.cpu[t].style.color = isConflict ? "#ef4444" : "#34d399";
+      }
+
+      if (domTrackCells.ready[t]) {
+        const readyProcs = PROCESSES.filter(p => gridData[p.id][t] === "wait").map(p => p.id);
+        domTrackCells.ready[t].textContent = readyProcs.join(",") || "-";
+      }
+
+      if (domTrackCells.io[t]) {
+        const ioProcs = PROCESSES.filter(p => gridData[p.id][t] === "io").map(p => p.id);
+        domTrackCells.io[t].textContent = ioProcs.join(",") || "-";
+      }
+    }
+
+    // Pintado Interactivo de Celdas
+    function paintCell(procId, tick) {
+      const p = PROCESSES.find(x => x.id === procId);
+      const targetState = (activeBrush === "eraser") ? "none" : activeBrush;
+
+      if (p && tick < p.arrival && targetState !== "none") {
+        showToast(`⚠️ Proceso ${procId} no puede ejecutar antes de su arribo (t = ${p.arrival}).`);
+        return;
+      }
+
+      if (gridData[procId][tick] === targetState) return; // Sin cambios
+
+      setCellState(procId, tick, targetState);
+    }
+
+    // Delegación de Eventos de Mouse/Touch Fluida
+    function setupGridInteractions() {
+      gridContainer.addEventListener("mousedown", (e) => {
+        const cell = e.target.closest(".pizarra-cell");
+        if (!cell) return;
+        e.preventDefault();
+        isMouseDown = true;
+        const procId = cell.getAttribute("data-proc");
+        const tick = parseInt(cell.getAttribute("data-tick"));
+        paintCell(procId, tick);
+      });
+
+      gridContainer.addEventListener("mouseover", (e) => {
+        if (!isMouseDown || e.buttons !== 1) return;
+        const cell = e.target.closest(".pizarra-cell");
+        if (!cell) return;
+        const procId = cell.getAttribute("data-proc");
+        const tick = parseInt(cell.getAttribute("data-tick"));
+        paintCell(procId, tick);
+      });
+
+      window.addEventListener("mouseup", () => {
+        isMouseDown = false;
+      });
+    }
+
+    // Diagnósticos en Vivo
+    function updateDiagnostics() {
+      const banner = document.querySelector("#diagnostic-banner");
+      const textEl = document.querySelector("#diagnostic-text");
+      const badgeEl = document.querySelector("#diagnostic-badge");
+
+      let conflicts = [];
+      for (let t = 0; t < TOTAL_TICKS; t++) {
+        const count = PROCESSES.filter(p => gridData[p.id][t] === "cpu").length;
+        if (count > 1) conflicts.push(t);
+      }
+
+      if (conflicts.length > 0) {
+        banner.className = "diagnostic-banner has-errors";
+        textEl.innerHTML = `⚠️ <strong>Conflicto Monoprocesador:</strong> En t = <code>${conflicts.join(", ")}</code> hay más de un proceso en CPU simultáneamente.`;
+        badgeEl.className = "badge-tag";
+        badgeEl.style.background = "#ef4444";
+        badgeEl.style.color = "#ffffff";
+        badgeEl.textContent = `${conflicts.length} Conflicto(s)`;
+      } else {
+        banner.className = "diagnostic-banner";
+        textEl.innerHTML = `✓ <strong>Sin conflictos de CPU:</strong> Un único proceso a la vez en el núcleo de ejecución. Atajos: <kbd>C</kbd> (CPU), <kbd>E</kbd> (Espera), <kbd>B</kbd> (E/S), <kbd>X</kbd> (Borrar).`;
+        badgeEl.className = "badge-tag green";
+        badgeEl.style.background = "";
+        badgeEl.style.color = "";
+        badgeEl.textContent = "✓ Reglas Válidas";
+      }
+    }
+
+    // Métricas en Vivo
+    function calculateLiveMetrics() {
+      const tbody = document.querySelector("#live-metrics-body");
+      const avgRow = document.querySelector("#live-averages-row");
+      if (!tbody) return;
+
+      let totalT = 0, totalE = 0, totalIP = 0, totalIR = 0, completedCount = 0;
+
+      const rowsHtml = PROCESSES.map(p => {
+        const states = gridData[p.id];
+        let lastCpuTick = -1;
+        let cpuCount = 0;
+        let waitCount = 0;
+
+        states.forEach((st, idx) => {
+          if (st === "cpu") {
+            lastCpuTick = idx;
+            cpuCount++;
+          } else if (st === "wait") {
+            waitCount++;
+          }
+        });
+
+        const tf = lastCpuTick >= 0 ? lastCpuTick + 1 : "-";
+        const ti = p.arrival;
+        const t = cpuCount;
+        let T = "-";
+        let E = "-";
+        let IP = "-";
+        let IR = "-";
+
+        if (typeof tf === "number" && t > 0) {
+          T = tf - ti;
+          E = T - t;
+          IP = (T / t).toFixed(2);
+          IR = (t / T).toFixed(3);
+
+          totalT += T;
+          totalE += E;
+          totalIP += parseFloat(IP);
+          totalIR += parseFloat(IR);
+          completedCount++;
+        }
+
+        return `
+          <tr>
+            <td><strong>Proceso ${p.id}</strong></td>
+            <td>${ti}</td>
+            <td>${tf}</td>
+            <td>${t}/${p.totalCpu}</td>
+            <td>${T}</td>
+            <td>${E}</td>
+            <td>${IP}</td>
+            <td>${IR}</td>
+          </tr>
+        `;
+      }).join("");
+
+      tbody.innerHTML = rowsHtml;
+
+      if (avgRow) {
+        if (completedCount > 0) {
+          const avgT = (totalT / completedCount).toFixed(1);
+          const avgE = (totalE / completedCount).toFixed(1);
+          const avgIP = (totalIP / completedCount).toFixed(2);
+          const avgIR = (totalIR / completedCount).toFixed(3);
+
+          avgRow.innerHTML = `
+            <td colspan="4" style="text-align:right;"><strong>Promedios Actuales (${completedCount}/5 procesos):</strong></td>
+            <td><strong>${avgT}</strong></td>
+            <td><strong>${avgE}</strong></td>
+            <td><strong>${avgIP}</strong></td>
+            <td><strong>${avgIR}</strong></td>
+          `;
+        } else {
+          avgRow.innerHTML = `<td colspan="8" style="color:var(--text-muted); text-align:center;">Pinta la ejecución de los procesos para ver promedios en vivo.</td>`;
+        }
+      }
+    }
+
+    // Pinceles y Atajos
+    const brushBtns = document.querySelectorAll(".brush-btn");
+    brushBtns.forEach(btn => {
+      btn.addEventListener("click", () => {
+        activateBrush(btn.getAttribute("data-brush"));
+      });
+    });
+
+    function activateBrush(name) {
+      brushBtns.forEach(b => {
+        if (b.getAttribute("data-brush") === name) b.classList.add("active");
+        else b.classList.remove("active");
+      });
+      activeBrush = name;
+    }
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT") return;
+      const k = e.key.toLowerCase();
+      if (k === "c") { activateBrush("cpu"); showToast("Pincel: CPU [Verde]"); }
+      else if (k === "e") { activateBrush("wait"); showToast("Pincel: Espera en Cola [Amarillo]"); }
+      else if (k === "b") { activateBrush("io"); showToast("Pincel: Bloqueo E/S [Naranja]"); }
+      else if (k === "x" || k === "delete" || k === "backspace") { activateBrush("eraser"); showToast("Pincel: Borrador"); }
+    });
+
+    // Rellenar Solución Oficial
+    document.querySelector("#btn-fill-official")?.addEventListener("click", () => {
+      const select = document.querySelector("#algo-comparator-select");
+      let selectedAlgo = select.value;
+      if (!selectedAlgo) {
+        selectedAlgo = "fcfs";
+        select.value = "fcfs";
+      }
+
+      const sol = OFFICIAL_SOLUTIONS[selectedAlgo];
+      if (!sol) {
+        showToast("⚠️ Algoritmo no encontrado");
+        return;
+      }
+
+      PROCESSES.forEach(p => {
+        const seq = sol[p.id] || [];
+        for (let t = 0; t < TOTAL_TICKS; t++) {
+          const state = t < seq.length ? seq[t] : "none";
+          setCellState(p.id, t, state, true);
+        }
+      });
+
+      updateDiagnostics();
+      calculateLiveMetrics();
+      showToast(`🪄 Cronograma de ${selectedAlgo.toUpperCase()} cargado con éxito.`);
+    });
+
+    // Auditar Maquetación del Alumno con el Kernel Oficial
+    document.querySelector("#btn-audit-grid")?.addEventListener("click", () => {
+      const select = document.querySelector("#algo-comparator-select");
+      let selectedAlgo = select.value;
+      if (!selectedAlgo) {
+        selectedAlgo = "fcfs";
+        select.value = "fcfs";
+      }
+
+      const sol = OFFICIAL_SOLUTIONS[selectedAlgo];
+      if (!sol) return;
+
+      let matches = 0;
+      let totalChecked = 0;
+      let differences = [];
+
+      PROCESSES.forEach(p => {
+        const seq = sol[p.id] || [];
+        seq.forEach((expected, t) => {
+          if (expected !== "none") {
+            totalChecked++;
+            if (gridData[p.id][t] === expected) {
+              matches++;
+            } else {
+              differences.push({ proc: p.id, tick: t, expected, actual: gridData[p.id][t] });
+            }
+          }
+        });
+      });
+
+      const pct = totalChecked > 0 ? Math.round((matches / totalChecked) * 100) : 0;
+
+      if (pct >= 85) {
+        if (typeof confetti === "function") {
+          confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        }
+        alert(`🎉 ¡Excelente maquetación!\nCoincides en un ${pct}% con la planificación oficial de ${selectedAlgo.toUpperCase()}.\nTu análisis de colas y ráfagas es correcto.`);
+      } else {
+        const sampleDiff = differences.slice(0, 3).map(d => `• Proceso ${d.proc} en t=${d.tick}: esperabas '${d.expected.toUpperCase()}' pero pintaste '${d.actual.toUpperCase()}'`).join("\n");
+        alert(`🔍 Tu maquetación coincide en un ${pct}% con ${selectedAlgo.toUpperCase()}.\n\nPrimeras diferencias detectadas:\n${sampleDiff || 'Revisa estados de CPU y espera'}\n\nRevisa las prioridades y llegadas de cada proceso.`);
+      }
+    });
+
+    // Limpiar Pizarra
+    document.querySelector("#btn-clear-canvas")?.addEventListener("click", () => {
+      if (confirm("¿Deseas limpiar todos los estados pintados en la pizarra?")) {
+        PROCESSES.forEach(p => {
+          for (let t = 0; t < TOTAL_TICKS; t++) {
+            setCellState(p.id, t, "none", true);
+          }
+        });
+        updateDiagnostics();
+        calculateLiveMetrics();
+        showToast("🧹 Pizarra limpiada");
+      }
+    });
+
+    // Selector de Algoritmo: Actualizar info
+    document.querySelector("#algo-comparator-select")?.addEventListener("change", (e) => {
+      const val = e.target.value;
+      if (val) {
+        showToast(`Algoritmo seleccionado: ${val.toUpperCase()}. Puedes hacer clic en 'Rellenar Solución' o 'Auditar con Kernel'.`);
+      }
+    });
+
+    // Toggle Tema Dark/Light
+    document.querySelector("#theme-toggle-btn")?.addEventListener("click", () => {
+      const current = document.documentElement.getAttribute("data-theme") || "dark";
+      const next = current === "dark" ? "light" : "dark";
+      document.documentElement.setAttribute("data-theme", next);
+    });
+
+    let toastTimer = null;
+    function showToast(msg) {
+      const textEl = document.querySelector("#diagnostic-text");
+      if (!textEl) return;
+      clearTimeout(toastTimer);
+      textEl.innerHTML = `📢 <strong>${msg}</strong>`;
+      toastTimer = setTimeout(() => {
+        updateDiagnostics();
+      }, 3500);
+    }
+
+    // Inicialización Inicial
+    initData();
+    buildGridDOM();
+    updateDiagnostics();
+    calculateLiveMetrics();
+  </script>
+</body>
+</html>
