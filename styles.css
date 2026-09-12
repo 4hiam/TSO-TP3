@@ -533,7 +533,7 @@ body {
 
 .gantt-grid-container {
   display: grid;
-  grid-template-columns: 80px repeat(31, minmax(28px, 1fr));
+  grid-template-columns: 96px repeat(30, minmax(28px, 1fr));
   gap: 2px;
   font-family: 'Fira Code', monospace;
   font-size: 0.78rem;

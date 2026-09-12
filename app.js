@@ -11,129 +11,93 @@ document.addEventListener('DOMContentLoaded', () => {
   const SIMULATION_DATA = {
     fcfs: {
       name: "FCFS (First-Come, First-Served)",
-      exec: ["A", "C", "C", "B", "B", "A", "A", "C", "D", "D", "D", "D", "D", "E", "B", "B", "A", "A", "A", "C", "C", "E", "E", "C"],
-      ready: [
-        ["A", "C"], ["C"], ["B", "A"], ["B", "A"], ["A", "C"], ["A", "C", "D"], ["C", "D", "E"], ["C", "D", "E"], 
-        ["D", "E", "B"], ["E", "B", "A"], ["E", "B", "A", "C"], ["E", "B", "A", "C"], ["E", "B", "A", "C"], ["B", "A", "C"], 
-        ["A", "C", "E"], ["A", "C", "E"], ["C", "E"], ["C", "E"], ["C", "E"], ["E", "C"], ["E", "C"], ["E"], ["E"], []
-      ],
-      io: [
-        [], ["A"], [], ["C"], ["B"], ["B"], ["B", "A"], ["A", "C"], [], [], [], [], [], [], [], [], [], [], [], ["E"], ["E"], ["C"], ["C"], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 21, t: 6, T: 21, E: 15, IP: 3.50, IR: 0.286 },
-        { proc: "B", ti: 2, tf: 18, t: 4, T: 16, E: 12, IP: 4.00, IR: 0.250 },
-        { proc: "C", ti: 0, tf: 27, t: 6, T: 27, E: 21, IP: 4.50, IR: 0.222 },
-        { proc: "D", ti: 5, tf: 13, t: 5, T: 8, E: 3, IP: 1.60, IR: 0.625 },
-        { proc: "E", ti: 6, tf: 25, t: 5, T: 19, E: 14, IP: 3.80, IR: 0.263 }
-      ],
-      averages: { T: 18.2, E: 13.0, IP: 3.48, IR: 0.330 }
+      timeline: {
+        A: ["cpu","io","wait","wait","wait","cpu","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","cpu","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none"]
+      },
+      exec: ["A","C","C","B","B","A","A","C","D","D","D","D","D","E","E","E","B","B","A","A","A","C","C","E","E",null,"C"],
+      ready: [["C"],[],["A","B"],["A"],["A","C"],["C","D"],["C","D","E"],["D","E"],["B","E"],["A","B","E"],["A","B","C","E"],["A","B","C","E"],["A","B","C","E"],["A","B","C"],["A","B","C"],["A","B","C"],["A","C"],["A","C"],["C","E"],["C","E"],["C","E"],["E"],["E"],[],[],[],[]],
+      io: [[],["A"],[],["C"],[],["B"],["B"],["A","B"],["A","C"],["C"],[],[],[],[],[],[],["E"],["E"],[],[],[],[],[],["C"],["C"],["C"],[]],
+      metrics: [{"proc":"A","ti":0,"tf":21,"t":6,"T":21,"E":15,"IP":3.5,"IR":0.2857142857},{"proc":"B","ti":2,"tf":18,"t":4,"T":16,"E":12,"IP":4,"IR":0.25},{"proc":"C","ti":0,"tf":27,"t":6,"T":27,"E":21,"IP":4.5,"IR":0.2222222222},{"proc":"D","ti":5,"tf":13,"t":5,"T":8,"E":3,"IP":1.6,"IR":0.625},{"proc":"E","ti":6,"tf":25,"t":5,"T":19,"E":14,"IP":3.8,"IR":0.2631578947}],
+      averages: {"T":18.2,"E":13,"IP":3.48,"IR":0.33}
     },
-
     sjn: {
       name: "SJN / SJF (Shortest Job Next - No Apropiativo)",
-      exec: ["A", "C", "C", "A", "A", "C", "B", "B", "C", "A", "A", "A", "C", "B", "B", "E", "E", "D", "D", "D", "D", "D", "E", "E"],
-      ready: [
-        ["A", "C"], ["C"], ["C", "B"], ["A"], ["C", "B"], ["C", "B", "D"], ["B", "D", "E"], ["B", "D", "E"],
-        ["C", "D", "E"], ["A", "D", "E"], ["A", "D", "E", "B"], ["A", "D", "E", "B"], ["C", "D", "E", "B"], ["B", "D", "E"],
-        ["B", "D", "E"], ["E", "D"], ["E", "D"], ["D"], ["D"], ["D"], ["D"], ["D"], ["E"], []
-      ],
-      io: [
-        [], ["A"], [], [], ["C"], ["A"], ["A", "C"], ["C"], ["B"], ["B", "C"], ["C"], [], [], [], [], [], [], ["E"], ["E"], [], [], [], [], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 13, t: 6, T: 13, E: 7, IP: 2.17, IR: 0.462 },
-        { proc: "B", ti: 2, tf: 16, t: 4, T: 14, E: 10, IP: 3.50, IR: 0.286 },
-        { proc: "C", ti: 0, tf: 14, t: 6, T: 14, E: 8, IP: 2.33, IR: 0.429 },
-        { proc: "D", ti: 5, tf: 24, t: 5, T: 19, E: 14, IP: 3.80, IR: 0.263 },
-        { proc: "E", ti: 6, tf: 26, t: 5, T: 20, E: 15, IP: 4.00, IR: 0.250 }
-      ],
-      averages: { T: 16.0, E: 10.8, IP: 3.16, IR: 0.338 }
+      timeline: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","cpu","io","io","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","none","none","none","none"]
+      },
+      exec: ["A","C","C","A","A","C","B","B","C","C","A","A","A","C","B","B","E","E","E","D","D","D","D","D","E","E"],
+      ready: [["C"],[],["A","B"],["B"],["B","C"],["B","D"],["D","E"],["A","D","E"],["A","D","E"],["A","D","E"],["D","E"],["B","D","E"],["B","D","E"],["B","D","E"],["D","E"],["D","E"],["D"],["D"],["D"],[],[],["E"],["E"],["E"],[],[]],
+      io: [[],["A"],[],["C"],[],["A"],["A","C"],["C"],["B"],["B"],["B","C"],["C"],["C"],[],[],[],[],[],[],["E"],["E"],[],[],[],[],[]],
+      metrics: [{"proc":"A","ti":0,"tf":13,"t":6,"T":13,"E":7,"IP":2.166666667,"IR":0.4615384615},{"proc":"B","ti":2,"tf":16,"t":4,"T":14,"E":10,"IP":3.5,"IR":0.2857142857},{"proc":"C","ti":0,"tf":14,"t":6,"T":14,"E":8,"IP":2.333333333,"IR":0.4285714286},{"proc":"D","ti":5,"tf":24,"t":5,"T":19,"E":14,"IP":3.8,"IR":0.2631578947},{"proc":"E","ti":6,"tf":26,"t":5,"T":20,"E":15,"IP":4,"IR":0.25}],
+      averages: {"T":16,"E":10.8,"IP":3.16,"IR":0.3377964141}
     },
-
     srt: {
       name: "SRT (Shortest Remaining Time - Apropiativo)",
-      exec: ["A", "C", "C", "A", "A", "C", "B", "B", "C", "A", "A", "A", "C", "B", "B", "E", "E", "D", "D", "D", "D", "D", "E", "E"],
-      ready: [
-        ["A", "C"], ["C"], ["C", "B"], ["A"], ["C", "B"], ["C", "B", "D"], ["B", "D", "E"], ["B", "D", "E"],
-        ["C", "D", "E"], ["A", "D", "E"], ["A", "D", "E", "B"], ["A", "D", "E", "B"], ["C", "D", "E", "B"], ["B", "D", "E"],
-        ["B", "D", "E"], ["E", "D"], ["E", "D"], ["D"], ["D"], ["D"], ["D"], ["D"], ["E"], []
-      ],
-      io: [
-        [], ["A"], [], [], ["C"], ["A"], ["A", "C"], ["C"], ["B"], ["B", "C"], ["C"], [], [], [], [], [], [], ["E"], ["E"], [], [], [], [], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 13, t: 6, T: 13, E: 7, IP: 2.17, IR: 0.462 },
-        { proc: "B", ti: 2, tf: 16, t: 4, T: 14, E: 10, IP: 3.50, IR: 0.286 },
-        { proc: "C", ti: 0, tf: 14, t: 6, T: 14, E: 8, IP: 2.33, IR: 0.429 },
-        { proc: "D", ti: 5, tf: 24, t: 5, T: 19, E: 14, IP: 3.80, IR: 0.263 },
-        { proc: "E", ti: 6, tf: 26, t: 5, T: 20, E: 15, IP: 4.00, IR: 0.250 }
-      ],
-      averages: { T: 16.0, E: 10.8, IP: 3.16, IR: 0.338 }
+      timeline: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","cpu","io","io","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","cpu","cpu","cpu","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","io","io","cpu","cpu","none","none","none","none","none","none","none"]
+      },
+      exec: ["A","C","C","A","A","C","B","B","C","C","A","A","A","C","B","B","E","E","E","D","D","E","E","D","D","D"],
+      ready: [["C"],[],["A","B"],["B"],["B","C"],["B","D"],["D","E"],["A","D","E"],["A","D","E"],["A","D","E"],["D","E"],["B","D","E"],["B","D","E"],["B","D","E"],["D","E"],["D","E"],["D"],["D"],["D"],[],[],["D"],["D"],[],[],[]],
+      io: [[],["A"],[],["C"],[],["A"],["A","C"],["C"],["B"],["B"],["B","C"],["C"],["C"],[],[],[],[],[],[],["E"],["E"],[],[],[],[],[]],
+      metrics: [{"proc":"A","ti":0,"tf":13,"t":6,"T":13,"E":7,"IP":2.166666667,"IR":0.4615384615},{"proc":"B","ti":2,"tf":16,"t":4,"T":14,"E":10,"IP":3.5,"IR":0.2857142857},{"proc":"C","ti":0,"tf":14,"t":6,"T":14,"E":8,"IP":2.333333333,"IR":0.4285714286},{"proc":"D","ti":5,"tf":26,"t":5,"T":21,"E":16,"IP":4.2,"IR":0.2380952381},{"proc":"E","ti":6,"tf":23,"t":5,"T":17,"E":12,"IP":3.4,"IR":0.2941176471}],
+      averages: {"T":16,"E":10.8,"IP":3.16,"IR":0.3377964141}
     },
-
     rr: {
       name: "Round Robin (q = 2)",
-      exec: ["A", "C", "C", "B", "B", "A", "A", "C", "D", "D", "E", "E", "B", "B", "A", "A", "C", "C", "D", "D", "E", "A", "D", "C", "E", "E"],
-      ready: [
-        ["A", "C"], ["C"], ["B", "A"], ["B", "A"], ["A", "C"], ["A", "C", "D"], ["C", "D", "E"], ["C", "D", "E"],
-        ["D", "E", "B"], ["E", "B", "A"], ["E", "B", "A", "C", "D"], ["B", "A", "C", "D", "E"], ["A", "C", "D", "E"], ["C", "D", "E", "A"],
-        ["D", "E", "A"], ["E", "A", "D"], ["A", "D", "C"], ["D", "C"], ["C", "E"], ["E"], ["A", "D", "C"], ["D", "C", "E"],
-        ["C", "E"], ["E"], ["E"], []
-      ],
-      io: [
-        [], ["A"], [], ["C"], ["B"], ["B"], ["B", "A"], ["A", "C"], [], [], [], [], [], [], [], [], [], [], [], ["E"], ["E"], [], [], [], [], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 22, t: 6, T: 22, E: 16, IP: 3.67, IR: 0.273 },
-        { proc: "B", ti: 2, tf: 14, t: 4, T: 12, E: 8, IP: 3.00, IR: 0.333 },
-        { proc: "C", ti: 0, tf: 24, t: 6, T: 24, E: 18, IP: 4.00, IR: 0.250 },
-        { proc: "D", ti: 5, tf: 23, t: 5, T: 18, E: 13, IP: 3.60, IR: 0.278 },
-        { proc: "E", ti: 6, tf: 26, t: 5, T: 20, E: 15, IP: 4.00, IR: 0.250 }
-      ],
-      averages: { T: 19.2, E: 14.0, IP: 3.65, IR: 0.277 }
+      timeline: {
+        A: ["cpu","io","wait","wait","wait","cpu","cpu","io","io","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","cpu","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","cpu","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","wait","wait","cpu","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","cpu","cpu","wait","wait","wait","wait","wait","wait","wait","wait","cpu","io","io","wait","cpu","cpu","none","none","none","none"]
+      },
+      exec: ["A","C","C","B","B","A","A","C","D","D","E","E","B","B","A","A","C","C","D","D","E","A","D","C","E","E"],
+      ready: [["C"],[],["A","B"],["A"],["A","C"],["C","D"],["C","D","E"],["D","E"],["B","E"],["A","B","E"],["A","B","C"],["A","B","C"],["A","C","D","E"],["A","C","D","E"],["C","D","E"],["C","D","E"],["A","D","E"],["A","D","E"],["A","E"],["A","E"],["A","D"],["D"],["C","E"],["E"],[],[]],
+      io: [[],["A"],[],["C"],[],["B"],["B"],["A","B"],["A","C"],["C"],[],[],[],[],[],[],["E"],["E"],[],[],[],[],["E"],["E"],[],[]],
+      metrics: [{"proc":"A","ti":0,"tf":22,"t":6,"T":22,"E":16,"IP":3.666666667,"IR":0.2727272727},{"proc":"B","ti":2,"tf":14,"t":4,"T":12,"E":8,"IP":3,"IR":0.3333333333},{"proc":"C","ti":0,"tf":24,"t":6,"T":24,"E":18,"IP":4,"IR":0.25},{"proc":"D","ti":5,"tf":23,"t":5,"T":18,"E":13,"IP":3.6,"IR":0.2777777778},{"proc":"E","ti":6,"tf":26,"t":5,"T":20,"E":15,"IP":4,"IR":0.25}],
+      averages: {"T":19.2,"E":14,"IP":3.653333333,"IR":0.2767676768}
     },
-
     priority: {
       name: "Prioridad Apropiativa (3 > 2 > 1 > 0)",
-      exec: ["C", "C", "B", "B", "C", "B", "D", "D", "D", "D", "D", "C", "B", "E", "E", "C", "E", "A", "A", "E", "A", "A", "A", "A"],
-      ready: [
-        ["A", "C"], ["A", "C"], ["A", "B"], ["A", "B", "C"], ["A", "B"], ["A", "D"], ["A", "E", "C"], ["A", "E", "C", "B"],
-        ["A", "E", "C", "B"], ["A", "E", "B"], ["A", "E"], ["A", "C", "E"], ["A", "E"], ["A"], ["A", "E"], ["A"], ["A"],
-        ["A"], ["A"], ["A"], [], [], [], []
-      ],
-      io: [
-        [], [], ["C"], [], ["C"], ["C", "B"], ["B"], [], [], [], ["C"], ["C"], [], [], ["E"], ["A", "E"], ["A"], [], [], [], [], [], [], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 29, t: 6, T: 29, E: 23, IP: 4.83, IR: 0.207 },
-        { proc: "B", ti: 2, tf: 14, t: 4, T: 12, E: 8, IP: 3.00, IR: 0.333 },
-        { proc: "C", ti: 0, tf: 16, t: 6, T: 16, E: 10, IP: 2.67, IR: 0.375 },
-        { proc: "D", ti: 5, tf: 10, t: 5, T: 5, E: 0, IP: 1.00, IR: 1.000 },
-        { proc: "E", ti: 6, tf: 22, t: 5, T: 16, E: 11, IP: 3.20, IR: 0.313 }
-      ],
-      averages: { T: 15.6, E: 10.4, IP: 2.94, IR: 0.446 }
+      timeline: {
+        A: ["wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","io","wait","wait","cpu","cpu","io","io","cpu","cpu","cpu","none"],
+        B: ["none","none","cpu","wait","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["cpu","cpu","io","cpu","io","io","wait","wait","wait","wait","cpu","cpu","io","io","io","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        D: ["none","none","none","none","none","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","cpu","wait","cpu","cpu","io","io","cpu","cpu","none","none","none","none","none","none","none","none"]
+      },
+      exec: ["C","C","B","C","B","D","D","D","D","D","C","C","B","B","E","C","E","E","A",null,"E","E","A","A",null,null,"A","A","A"],
+      ready: [["A"],["A"],["A","C"],["A","B"],["A"],["A","E"],["A","E"],["A","E"],["A","E"],["A","E"],["A","E"],["A","E"],["A","E"],["A","E"],["A"],["A","E"],["A"],["A"],[],[],["A"],["A"],[],[],[],[],[],[],[]],
+      io: [[],[],["C"],[],["C"],["B","C"],["B"],[],[],[],["E"],["E"],["C"],["C"],["C"],[],[],[],["E"],["A","E"],["A"],[],[],[],["A"],["A"],[],[],[]],
+      metrics: [{"proc":"A","ti":0,"tf":29,"t":6,"T":29,"E":23,"IP":4.833333333,"IR":0.2068965517},{"proc":"B","ti":2,"tf":14,"t":4,"T":12,"E":8,"IP":3,"IR":0.3333333333},{"proc":"C","ti":0,"tf":16,"t":6,"T":16,"E":10,"IP":2.666666667,"IR":0.375},{"proc":"D","ti":5,"tf":10,"t":5,"T":5,"E":0,"IP":1,"IR":1},{"proc":"E","ti":6,"tf":22,"t":5,"T":16,"E":11,"IP":3.2,"IR":0.3125}],
+      averages: {"T":15.6,"E":10.4,"IP":2.94,"IR":0.445545977}
     },
-
     hrn: {
       name: "HRN (Highest Response Ratio Next - No Apropiativo)",
-      exec: ["A", "C", "C", "A", "A", "B", "B", "C", "E", "E", "A", "A", "B", "B", "C", "C", "D", "D", "D", "D", "D", "E", "E", "C"],
-      ready: [
-        ["A", "C"], ["C"], ["B", "A"], ["B", "A"], ["B", "C"], ["B", "C", "D"], ["C", "D", "E"], ["C", "D", "E", "A"],
-        ["D", "E", "A"], ["D", "E", "A", "B"], ["D", "A", "B", "C"], ["D", "A", "B", "C"], ["D", "B", "C", "E"], ["D", "B", "C", "E"],
-        ["D", "C", "E"], ["D", "E"], ["E", "C"], ["E", "C"], ["C"], ["C"], ["C"], ["E"], ["E"], []
-      ],
-      io: [
-        [], ["A"], [], [], ["A"], ["A"], ["B"], ["B", "C"], [], ["E"], [], [], [], ["C"], [], [], [], [], [], [], [], ["C"], [], []
-      ],
-      metrics: [
-        { proc: "A", ti: 0, tf: 14, t: 6, T: 14, E: 8, IP: 2.33, IR: 0.429 },
-        { proc: "B", ti: 2, tf: 16, t: 4, T: 14, E: 10, IP: 3.50, IR: 0.286 },
-        { proc: "C", ti: 0, tf: 26, t: 6, T: 26, E: 20, IP: 4.33, IR: 0.231 },
-        { proc: "D", ti: 5, tf: 23, t: 5, T: 18, E: 13, IP: 3.60, IR: 0.278 },
-        { proc: "E", ti: 6, tf: 25, t: 5, T: 19, E: 14, IP: 3.80, IR: 0.263 }
-      ],
-      averages: { T: 20.8, E: 13.0, IP: 5.20, IR: 0.330 }
+      timeline: {
+        A: ["cpu","io","wait","cpu","cpu","io","io","wait","wait","wait","wait","cpu","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        B: ["none","none","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none","none","none","none","none","none","none","none","none","none"],
+        C: ["wait","cpu","cpu","io","wait","wait","wait","cpu","io","io","wait","wait","wait","wait","wait","wait","cpu","cpu","io","io","io","wait","wait","wait","wait","cpu","none","none","none","none"],
+        D: ["none","none","none","none","none","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","cpu","cpu","cpu","none","none","none","none","none","none","none"],
+        E: ["none","none","none","none","none","none","wait","wait","cpu","cpu","cpu","io","io","wait","wait","wait","wait","wait","wait","wait","wait","wait","wait","cpu","cpu","none","none","none","none","none"]
+      },
+      exec: ["A","C","C","A","A","B","B","C","E","E","E","A","A","A","B","B","C","C","D","D","D","D","D","E","E","C"],
+      ready: [["C"],[],["A","B"],["B"],["B","C"],["C","D"],["C","D","E"],["D","E"],["A","B","D"],["A","B","D"],["A","B","D"],["B","D"],["B","D"],["B","D"],["C","D"],["C","D"],["D"],["D"],["E"],["E"],["E"],["E"],["E"],[],[],[]],
+      io: [[],["A"],[],["C"],[],["A"],["A"],["B"],["B","C"],[],[],[],[],[],[],["C"],[],[],[],[],[],[],[],["C"],[],[]],
+      metrics: [{"proc":"A","ti":0,"tf":14,"t":6,"T":14,"E":8,"IP":2.333333333,"IR":0.4285714286},{"proc":"B","ti":2,"tf":16,"t":4,"T":14,"E":10,"IP":3.5,"IR":0.2857142857},{"proc":"C","ti":0,"tf":26,"t":6,"T":26,"E":20,"IP":4.333333333,"IR":0.2307692308},{"proc":"D","ti":5,"tf":23,"t":5,"T":18,"E":13,"IP":3.6,"IR":0.2777777778},{"proc":"E","ti":6,"tf":25,"t":5,"T":19,"E":14,"IP":3.8,"IR":0.2631578947}],
+      averages: {"T":20.8,"E":13,"IP":5.2,"IR":0.33}
     }
   };
 
@@ -349,28 +313,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // Rows for each process
     procs.forEach(p => {
       html += `<div class="gantt-row-label">Proceso ${p}</div>`;
+      const pTimeline = (algo.timeline && algo.timeline[p]) ? algo.timeline[p] : [];
       for (let t = 0; t < totalCols; t++) {
         let cellClass = "cell-idle";
         let cellText = "";
 
         if (t <= upToTick) {
-          const isCpu = t < algo.exec.length && algo.exec[t] === p;
-          const isIo = t < algo.io.length && algo.io[t].includes(p);
-          const isWait = t < algo.ready.length && algo.ready[t].includes(p);
-
-          if (isCpu) {
+          const state = t < pTimeline.length ? pTimeline[t] : "none";
+          if (state === "cpu") {
             cellClass = "cell-cpu";
             cellText = "CPU";
-          } else if (isIo) {
+          } else if (state === "io") {
             cellClass = "cell-io";
             cellText = "E/S";
-          } else if (isWait) {
+          } else if (state === "wait") {
             cellClass = "cell-wait";
             cellText = "E";
           }
         }
 
-        html += `<div class="gantt-cell ${cellClass}">${cellText}</div>`;
+        const isCurrentCol = (t === upToTick);
+        const currentStyle = isCurrentCol ? 'box-shadow: inset 0 0 0 1px #38bdf8;' : '';
+        html += `<div class="gantt-cell ${cellClass}" style="${currentStyle}">${cellText}</div>`;
       }
     });
 
