@@ -1,0 +1,83 @@
+{
+  "tp_metadata": {
+    "tp_id": "TSO-2026-TP3",
+    "title": "TP N° 3: Algoritmos de Planificación de CPU",
+    "catedra": "Teoría de Sistemas Operativos - UNJu Facultad de Ingeniería",
+    "submitted_at": "2026-09-19T13:16:36.231Z"
+  },
+  "student": {
+    "name": "Adrian Mauricio Benitez",
+    "dni": "DNI 29707975 / LIE 0093",
+    "career": "LIE",
+    "github_user": "4hiam"
+  },
+  "answers": {
+    "ej1_mecanismos_vs_politicas_metricas": {
+      "metric_turnaround": "turnaround",
+      "metric_waiting": "waiting",
+      "metric_service_index": "service_index",
+      "ctx_switch": "mecanismo",
+      "queue_management": "mecanismo",
+      "priority_decision": "politica",
+      "quantum_sizing": "politica",
+      "metric_throughput": "throughput",
+      "metric_cpu_util": "cpu_util"
+    },
+    "ej2_fcfs_convoy": {
+      "final_order": "d-b-a-e-c",
+      "best_process": "d",
+      "worst_process": "c",
+      "convoy_cause": "cpu_hog_blocking"
+    },
+    "ej3_sjn_no_apropiativo": {
+      "dispatch_t0": "a",
+      "dispatch_t1": "c",
+      "preemption_behavior": "no_apropiativo",
+      "avg_wait_time": "10.8"
+    },
+    "ej4_srt_apropiativo": {
+      "preemption_condition": "remaining_less_than_current",
+      "overhead_tradeoff": "context_switch_overhead",
+      "workload_comparison": "identical_to_sjn_on_bursts",
+      "starvation_risk": "long_processes"
+    },
+    "ej5_round_robin": {
+      "final_order": "b-a-d-c-e",
+      "quantum_expiration": "ready_queue_tail",
+      "tie_breaker_order": "llegadas_desbloqueos_quantum",
+      "quantum_impact_large": "approaches_fcfs"
+    },
+    "ej6_prioridad_apropiativa": {
+      "priority_scale": "higher_number_higher_priority",
+      "first_dispatched": "c",
+      "preemption_event": "arrival_d_at_5",
+      "starvation_solution": "aging"
+    },
+    "ej7_hrn_algoritmo": {
+      "formula_definition": "ratio_service_wait",
+      "preemption_type": "no_apropiativo",
+      "starvation_behavior": "prevents_starvation",
+      "first_finished": "d"
+    },
+    "ej8_matriz_comparativa_multicriterio": {
+      "min_avg_wait": "prioridad_apropiativa",
+      "max_fairness_interactive": "round_robin",
+      "highest_wait_c": "fcfs",
+      "overall_most_penalized": "a_in_prioridad"
+    },
+    "ej9_planificacion_multiprocesadores": {
+      "processor_affinity": "cache_locality",
+      "load_balancing": "migration_balance",
+      "resource_contention": "shared_memory_bus"
+    },
+    "ej10_evaluacion_seleccion_politicas": {
+      "golden_rule": "no_perfect_algorithm",
+      "interactive_system": "round_robin_priority",
+      "batch_throughput": "sjf_srt",
+      "context_switch_cost": "throughput_penalty"
+    },
+    "null": {
+      "null": "Adrian Benitez"
+    }
+  }
+}
