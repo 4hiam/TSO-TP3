@@ -3,7 +3,7 @@ rubric_tp3_master.json
 *_master.json
 
 # Entregas locales y temporales de evaluación
-respuestas_tp3*.json
+//respuestas_tp3*.json
 *.pyc
 __pycache__/
 .venv/
